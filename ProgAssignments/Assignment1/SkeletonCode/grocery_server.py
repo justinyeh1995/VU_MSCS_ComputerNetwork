@@ -96,6 +96,8 @@ class GroceryOrder ():
 
         request = self.grocery_obj.recv_request ()
         print ("Received request: {}".format (request))
+        # @handle the request here, including those bad requests
+        """if ...: do sth // else: raise BadResquest"""       
 
         resp = self.gen_response_msg ()
         self.grocery_obj.send_response (resp)
