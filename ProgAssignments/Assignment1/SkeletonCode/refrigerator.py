@@ -20,6 +20,7 @@ import time   # for sleep
 import argparse # for argument parsing
 import configparser # for configuration parsing
 import zmq # actually not needed here but we are printing zmq version and hence needed
+import random
 
 # add to the python system path so that the following packages can be found
 # relative to this directory
@@ -86,8 +87,45 @@ class Refrigerator ():
     # We do not care about its contents.
     
     groc_msg = GroceryOrderMessage ()
-    # fill up the fields in whatever way you want
     
+    groc_msg.type = "ORDER"
+
+    content = {
+              "veggies": 
+              { 
+                  "tomato": round(random.uniform(33.33, 66.66), 2),
+                  "cucumber": round(random.uniform(33.33, 66.66), 2), 
+                  "potato": round(random.uniform(33.33, 66.66), 2), 
+                  "bokchoy": round(random.uniform(33.33, 66.66), 2), 
+                  "broccoli": round(random.uniform(33.33, 66.66), 2) 
+              }, 
+              "drinks": 
+              {
+                  "cans": 
+                  {
+                      "coke": random.randint(1,5),
+                      "beer": random.randint(1,5),
+                      "soda": random.randint(1,5)
+                  },
+                  "bottles": 
+                  {
+                      "Sprite": random.randint(1,5),
+                      "Gingerale": random.randint(1,5),
+                      "SevenUp": random.randint(1,5)
+                  }
+              }, 
+              "milk": [(random.randint(1,6), round(random.uniform(33.33, 66.66), 2)) for i in range(random.randint(1,5))], 
+              "bread": [(random.randint(1,3), round(random.uniform(33.33, 66.66), 2)) for i in range(random.randint(1,5))], 
+              "meat": [(random.randint(1,4), round(random.uniform(33.33, 66.66), 2)) for i in range(random.randint(1,5))]
+              }
+
+    groc_msg.addContent(content)
+
+    groc_msg.__str__()
+
+    # fill up the fields in whatever way you want
+    print("Done!")  
+
     return groc_msg
   
   ########################################
@@ -102,8 +140,17 @@ class Refrigerator ():
     # We do not care about its contents.
     
     status_msg = HealthStatusMessage ()
-    # fill up the fields in whatever way you want
     
+    status_msg.type = "HEALTH"
+    
+    status = [random.randint(1,3), random.randint(1,100), random.randint(1,2), random.randint(1,100), random.randint(1,100), random.randint(1,2)]
+
+    status_msg.addContent(status)
+
+    status_msg.__str__()
+    # fill up the fields in whatever way you want
+    print("Done!")  
+
     return status_msg
   
   ##################################
