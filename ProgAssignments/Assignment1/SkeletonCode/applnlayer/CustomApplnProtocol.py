@@ -20,6 +20,7 @@ from enum import Enum  # for enumerated types
 sys.path.insert (0, "../")
 
 from transportlayer.CustomTransportProtocol import CustomTransportProtocol as XPortProtoObj
+import serialize as sz  # this is from the file serialize.py in the same directory
 
 ############################################
 #  Serialization Enumeration Type
@@ -106,6 +107,17 @@ class CustomApplnProtocol ():
       #
       # Note, here we are sending some dummy field just for testing purposes
       # but remove it with the correct payload and length.
+      if order.type == "ORDER":
+        #@TODO@ Implement this
+        print ("serialize the message")
+        start_time = time.time ()
+        buf = sz.serialize (order)
+        end_time = time.time ()
+        print ("Serialization took {} secs".format (end_time-start_time))
+
+      else:  # Unknown; raise exception
+        raise BadMessageType ()
+
       self.xport_obj.send_appln_msg (order.dummy, len (order.dummy))
     except Exception as e:
       raise e
@@ -124,6 +136,17 @@ class CustomApplnProtocol ():
       #
       # Note, here we are sending some dummy field just for testing purposes
       # but remove it with the correct payload and length.
+      if status.type == "HEALTH":
+        #@TODO@ Implement this
+        print ("serialize the message")
+        start_time = time.time ()
+        buf = sz.serialize (status) # to-do which serialization?
+        end_time = time.time ()
+        print ("Serialization took {} secs".format (end_time-start_time))
+
+      else:  # Unknown; raise exception
+        raise BadMessageType ()
+
       self.xport_obj.send_appln_msg (status.dummy, len (status.dummy))
     except Exception as e:
       raise e
@@ -142,6 +165,17 @@ class CustomApplnProtocol ():
       #
       # Note, here we are sending some dummy field just for testing purposes
       # but remove it with the correct payload and length.
+      if response.type == "RESPONSE":
+        #@TODO@ Implement this
+        print ("serialize the message")
+        start_time = time.time ()
+        buf = sz.serialize (response) # to-do which serialization?
+        end_time = time.time ()
+        print ("Serialization took {} secs".format (end_time-start_time))
+
+      else:  # Unknown; raise exception
+        raise BadMessageType ()
+
       self.xport_obj.send_appln_msg (response.dummy, len (response.dummy))
     except Exception as e:
       raise e

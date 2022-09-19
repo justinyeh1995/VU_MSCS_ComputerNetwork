@@ -78,6 +78,7 @@ class GroceryOrder ():
     # Basically, a response msg is very simple. Set the message type and message
     
     resp_msg = ResponseMessage ()
+    resp_msg.type = "RESPONSE"
     # fill up the fields in whatever way you want
     
     return resp_msg
@@ -94,10 +95,18 @@ class GroceryOrder ():
         # @TODO
         # For now we send a dummy response
 
-        request = self.grocery_obj.recv_request ()
+        request = self.grocery_obj.recv_request () # request is a buffer
         print ("Received request: {}".format (request))
         # @handle the request here, including those bad requests
-        """if ...: do sth // else: raise BadResquest"""       
+        """ deserialize here"""
+        """if ...: do sth // else: send badRequest"""
+        ### check type
+        msg = sz.deserialize(request)
+        resp_msg.addCode(random.randint(1,2)) # just for now 
+        if resp_msg.code == "OK": 
+          resp_msg.contents = "You are healthy!"
+        else
+          resp_msg.contents = "Bad Request!"
 
         resp = self.gen_response_msg ()
         self.grocery_obj.send_response (resp)

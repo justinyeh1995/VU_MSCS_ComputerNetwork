@@ -21,6 +21,7 @@ import time   # for sleep
 import argparse # for argument parsing
 import configparser # for configuration parsing
 import zmq # actually not needed here but we are printing zmq version and hence needed
+import serialize as sz
 
 # add to the python system path so that the following packages can be found
 # relative to this directory
@@ -77,8 +78,14 @@ class HealthStatus ():
     # Basically, a response msg is very simple. Set the message type and message
     
     resp_msg = ResponseMessage ()
+    resp_msg.type = "RESPONSE"
+    resp_msg.addCode(random.randint(1,2)) # just for now 
+    if resp_msg.code == "OK": 
+      resp_msg.contents = "You are healthy!"
+    else
+      resp_msg.contents = "Bad Request!"
     # fill up the fields in whatever way you want
-    
+    resp_msg.__str__ ()    
     return resp_msg
   
   ##################################
@@ -92,6 +99,7 @@ class HealthStatus ():
         # else send a valid response
         # @TODO
         # For now we send a dummy response
+        # how can we identify a bad badrequest?
 
         request = self.health_obj.recv_request ()
         print ("Received request: {}".format (request))
