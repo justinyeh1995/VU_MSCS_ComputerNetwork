@@ -31,7 +31,7 @@ def driver (name, iters, vec_len):
     
   for i in range (iters):
     print ("-----Iteration: {} contents of message before serializing ----------".format (i))
-    if i % 2:    
+    if i % 2 == 0:    
       ## for every iteration, let us fill up our custom message with some info
       #cm.seq_num = i # this will be our sequence number
       #cm.ts = time.time ()  # current time

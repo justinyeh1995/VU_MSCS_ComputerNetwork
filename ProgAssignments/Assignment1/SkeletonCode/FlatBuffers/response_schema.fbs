@@ -30,7 +30,7 @@ enum reqStatus: byte {
    BAD_REQUEST
 }
 
-table ResponseMessage
+table Message
 {
    type: string;
    code: reqStatus;   // this is like the seq num in a TCP segment
@@ -41,4 +41,4 @@ table ResponseMessage
 // The reason we need this is because we may have a very complicated nested
 // data structure and so we need to tell the compiler the starting point.
 
-root_type ResponseMessage;
+root_type Message;
