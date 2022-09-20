@@ -325,7 +325,7 @@ class ResponseMessage:
   # @TODO - the above is simply to test the code. You need to get rid of that dummy
   # and replace it with the data struture we have for the response message 
   # as represented in the host (as a Python language data structure)
-
+  type: str
   code: str
   contents: str
   
