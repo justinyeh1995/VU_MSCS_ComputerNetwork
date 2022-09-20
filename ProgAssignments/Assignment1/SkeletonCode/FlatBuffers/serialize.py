@@ -240,16 +240,49 @@ def deserialize (buf):
         cm = GroceryOrderMessage()
         packet = order.Message.GetRootAs(buf, 0)
         cm.type = packet.Type()
+        contents = {
+                    "veggies": 
+                        {"tomato": 0, "cucumber": 0, "potato":0, "bokchoy": 0, "broccoli": 0 },
+                    "drinks":
+                        {
+                            "cans": {
+                                "coke": 0,
+                                "beer": 0,
+                                "soda": 0
+                                },
+                            "bottles": {
+                                "Sprite":0,
+                                "Gingerale": 0,
+                                "SevenUp": 0
+                                }
+                            },
+                    "milk": [],
+                    "bread": [],
+                    "meat": []
+                }
+        contents["veggies"]["tomato"] = packet.Contents().Veggies().Tomato()
         # @TO-DO@
+        cm.contents = contents
     elif test_packet.Type() == b"HEALTH":
         cm = HealthStatusMessage()
         packet = health.Message.GetRootAs(buf, 0)
         cm.type = packet.Type()
+        contents = {
+                "dispenser": "",
+                "icemaker": 0,
+                "lightbulb": "",
+                "fridge_temp":0,
+                "freezer_temp": 0,
+                "sensor_status": ""
+                }
         # @TO-DO@
+        cm.contents = contents
     elif test_packet.Type() == b"RESPONSE":
         cm = ResponseMessage()
         packet = order.Message.GetRootAs(buf, 0)
         cm.type = response.Type()
+        cm.code = packet.Code()
+        cm.contents = packet.Contents()
         # @TO-DO@
     ## sequence number
     #cm.seq_num = packet.SeqNo ()
