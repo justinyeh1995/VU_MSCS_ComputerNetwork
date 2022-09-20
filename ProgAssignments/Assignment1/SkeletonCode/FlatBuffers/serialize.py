@@ -205,6 +205,13 @@ def serialize (cm):
     elif cm.type == "RESPONSE":
         res.Start(builder)
         # @TODO@
+        if cm.code == "OK":
+            code = reqstatus.reqStatus().OK    
+        elif cm.code == "PARTIAL":
+            code = reqstatus.reqStatus().BAD_REQUEST   
+        res.AddType (builder, type_)
+        res.AddCode (builder, code)
+        res.AddContents(builder, cm.contents)
         serialized_msg = res.End(builder)
 
     # end the serialization process
