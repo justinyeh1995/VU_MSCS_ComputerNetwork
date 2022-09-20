@@ -32,21 +32,21 @@ import Proto.HealthStatusProto.Contents as contents   # this is the generated co
 import Proto.HealthStatusProto.Decision as decision
 import Proto.HealthStatusProto.Status as status
 
-#import Proto.GroceryOrderProto.Message as order   # this is the generated code by the flatc compiler
-#import Proto.GroceryOrderProto.Bottles as bottles
-#import Proto.GroceryOrderProto.Cans as cans
-#import Proto.GroceryOrderProto.Container as container
-#import Proto.GroceryOrderProto.Veggies as veggies
-#import Proto.GroceryOrderProto.Milk as milk
-#import Proto.GroceryOrderProto.MilkTpye as milktype
-#import Proto.GroceryOrderProto.Bread as bread
-#import Proto.GroceryOrderProto.BreadType as breadtype
-#import Proto.GroceryOrderProto.Meat as meat
-#import Proto.GroceryOrderProto.MeatType as meattype
-#import Proto.GroceryOrderProto.Grocery as grocery
-#
-#import Proto.ResponseProto.Message as res
-#import Proto.ResponseProto.reqStatus as reqstatus
+import Proto.GroceryOrderProto.Message as order   # this is the generated code by the flatc compiler
+import Proto.GroceryOrderProto.Bottles as bottles
+import Proto.GroceryOrderProto.Cans as cans
+import Proto.GroceryOrderProto.Container as container
+import Proto.GroceryOrderProto.Veggies as veggies
+import Proto.GroceryOrderProto.Milk as milk
+import Proto.GroceryOrderProto.MilkType as milktype
+import Proto.GroceryOrderProto.Bread as bread
+import Proto.GroceryOrderProto.BreadType as breadtype
+import Proto.GroceryOrderProto.Meat as meat
+import Proto.GroceryOrderProto.MeatType as meattype
+import Proto.GroceryOrderProto.Grocery as grocery
+
+import Proto.ResponseProto.Message as res
+import Proto.ResponseProto.reqStatus as reqstatus
 #
 import CustomAppProto.Message as msg   # this is the generated code by the flatc compiler
 from custom_msg_local import GroceryOrderMessage, HealthStatusMessage, ResponseMessage
@@ -70,8 +70,110 @@ def serialize (cm):
 
     if cm.type == "ORDER":
        # create logic for native msg -> flatbuffer msg
-        order.Start(builder)
         # @TODO@
+        #grocery.Start(builder)
+
+        #Bottles = bottles.CreateBottles(builder,cm.contents["drinks"]["bottles"]["Sprite"],
+        #                                      cm.contents["drinks"]["bottles"]["Gingerale"],
+        #                                      cm.contents["drinks"]["bottles"]["SevenUp"]
+        #                                      )
+        #Cans = cans.CreateCans(builder,cm.contents["drinks"]["cans"]["coke"],
+        #                               cm.contents["drinks"]["cans"]["beer"],
+        #                               cm.contents["drinks"]["cans"]["soda"]
+        #                               )
+        ##Drinks = drinks.CreateDrinks(builder,Cans,Bottles)
+        #Drinks = container.CreateContainer(builder,cm.contents["drinks"]["cans"]["coke"],
+        #                                           cm.contents["drinks"]["cans"]["beer"],
+        #                                           cm.contents["drinks"]["cans"]["soda"],
+        #                                           cm.contents["drinks"]["bottles"]["Sprite"],
+        #                                           cm.contents["drinks"]["bottles"]["Gingerale"],
+        #                                           cm.contents["drinks"]["bottles"]["SevenUp"]
+        #                                          )
+        #Veggies = veggies.CreateVeggies(builder, cm.contents["veggies"]["tomato"], 
+        #                                         cm.contents["veggies"]["cucumber"],
+        #                                         cm.contents["veggies"]["potato"],
+        #                                         cm.contents["veggies"]["bokchoy"],
+        #                                         cm.contents["veggies"]["broccoli"]
+        #                                         )
+
+        MilkOrder = []
+        for item in cm.contents["milk"]:
+            if item["type"] == "ONE_PCT":
+                itemtype = milktype.MilkType.ONE_PCT
+            elif item["type"] == "TWO_PCT":
+                itemtype = milktype.MilkType.TWO_PCT
+            elif item["type"] == "FAT_FREE":
+                itemtype = milktype.MilkType.FAT_FREE
+            elif item["type"] == "WHOLE":
+                itemtype = milktype.MilkType.WHOLE
+            elif item["type"] == "CASHEW":
+                itemtype = milktype.MilkType.CASHEW
+            elif item["type"] == "OAT":
+                itemtype = milktype.MilkType.OAT
+            MilkOrder.append(milk.CreateMilk(builder, itemtype, item["quantity"]))
+
+        grocery.StartMilkVector(builder, len(MilkOrder))
+        for i in reversed(range(len(MilkOrder))):
+            builder.PrependUOffsetTRelative (MilkOrder[i])
+        Milk = builder.EndVector()
+
+        BreadOrder = []
+        for item in cm.contents["bread"]:
+            if item["type"] == "WHOLE_WEAT":
+                itemtype = breadtype.BreadType.WHOLE_WEAT
+            elif item["type"] == "PUMPERNICKEL":
+                itemtype = breadtype.BreadType.PUMPERNICKEL
+            elif item["type"] == "RYE":
+                itemtype = breadtype.BreadType.RYE
+            BreadOrder.append(bread.CreateBread(builder, itemtype, item["quantity"]))
+
+        grocery.StartBreadVector(builder, len(BreadOrder))
+        for i in reversed(range(len(BreadOrder))):
+            builder.PrependUOffsetTRelative (BreadOrder[i])
+        Bread = builder.EndVector()
+
+        MeatOrder = []
+        for item in cm.contents["meat"]:
+            if item["type"] == "PORK":
+                itemtype = meattype.MeatType.PORK
+            elif item["type"] == "LAMB":
+                itemtype = meattype.MeatType.LAMB
+            elif item["type"] == "CHICKEN":
+                itemtype = meattype.MeatType.CHICKEN
+            elif item["type"] == "BEEF":
+                itemtype = meattype.MeatType.BEEF
+            MeatOrder.append(meat.CreateMeat(builder, itemtype, item["quantity"]))
+        grocery.StartMeatVector(builder, len(MeatOrder))
+        for i in reversed(range(len(MeatOrder))):
+            builder.PrependUOffsetTRelative (MeatOrder[i])
+        Meat = builder.EndVector()
+
+        grocery.Start(builder)
+
+        grocery.AddVeggies (builder,veggies.CreateVeggies(builder, 
+                                                 cm.contents["veggies"]["tomato"], 
+                                                 cm.contents["veggies"]["cucumber"],
+                                                 cm.contents["veggies"]["potato"],
+                                                 cm.contents["veggies"]["bokchoy"],
+                                                 cm.contents["veggies"]["broccoli"]
+                                                 ))
+        grocery.AddDrinks (builder, container.CreateContainer(builder,
+                                                   cm.contents["drinks"]["cans"]["coke"],
+                                                   cm.contents["drinks"]["cans"]["beer"],
+                                                   cm.contents["drinks"]["cans"]["soda"],
+                                                   cm.contents["drinks"]["bottles"]["Sprite"],
+                                                   cm.contents["drinks"]["bottles"]["Gingerale"],
+                                                   cm.contents["drinks"]["bottles"]["SevenUp"]
+                                                  ))
+        grocery.AddMilk (builder, Milk)
+        grocery.AddBread (builder, Bread)
+        grocery.AddMeat (builder, Meat)
+        
+        Grocery = grocery.End(builder)
+
+        order.Start(builder)
+        order.AddType (builder, type_)
+        order.AddContents (builder, Grocery)
         serialized_msg = order.End(builder)
        
     elif cm.type == "HEALTH":
@@ -99,6 +201,7 @@ def serialize (cm):
         health.AddType (builder, type_)
         #health.AddContents (builder, ct)
         serialized_msg = health.End (builder)
+
     elif cm.type == "RESPONSE":
         res.Start(builder)
         # @TODO@
