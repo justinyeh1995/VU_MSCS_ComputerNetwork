@@ -34,7 +34,7 @@ table Message
 {
    type: string;
    code: reqStatus;   // this is like the seq num in a TCP segment
-   content: string;       // say this is the timestamp
+   contents: string;       // say this is the timestamp
 }
 
 // indicate what is the top level structure from where the serialization starts.

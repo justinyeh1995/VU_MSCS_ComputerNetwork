@@ -39,7 +39,7 @@ class Message(object):
         return 0
 
     # Message
-    def Content(self):
+    def Contents(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
@@ -54,9 +54,9 @@ def AddType(builder, type):
 def MessageAddCode(builder, code): builder.PrependInt8Slot(1, code, 0)
 def AddCode(builder, code):
     return MessageAddCode(builder, code)
-def MessageAddContent(builder, content): builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(content), 0)
-def AddContent(builder, content):
-    return MessageAddContent(builder, content)
+def MessageAddContents(builder, contents): builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(contents), 0)
+def AddContents(builder, contents):
+    return MessageAddContents(builder, contents)
 def MessageEnd(builder): return builder.EndObject()
 def End(builder):
     return MessageEnd(builder)
