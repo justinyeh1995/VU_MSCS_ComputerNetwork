@@ -163,6 +163,7 @@ class Grocery:
   def addBread(self, details):
     self.bread = [Bread(BreadType(i).name, n).__dict__ for i,n in details]
     
+
   def addMeat(self, details):
     self.meat = [Meat(MeatType(i).name, n).__dict__ for i,n in details]
 
@@ -306,7 +307,7 @@ class ResponseMessage:
   # @TODO - the above is simply to test the code. You need to get rid of that dummy
   # and replace it with the data struture we have for the response message 
   # as represented in the host (as a Python language data structure)
-  type: str # not sure on this one
+
   code: str
   contents: str
   

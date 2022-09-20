@@ -77,7 +77,6 @@ def driver (name, iters, vec_len):
       status = [random.randint(1,3), random.randint(1,100), random.randint(1,2), random.randint(1,100), random.randint(1,100), random.randint(1,2)]
       cm.addContent(status)
     
-    print ("-----Iteration: {} contents of message before serializing ----------".format (i))
     cm.__str__()
         
     # here we are calling our serialize method passing it
