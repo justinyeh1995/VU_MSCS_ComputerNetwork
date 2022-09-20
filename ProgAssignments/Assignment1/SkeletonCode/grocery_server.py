@@ -101,14 +101,21 @@ class GroceryOrder ():
         """ deserialize here"""
         """if ...: do sth // else: send badRequest"""
         ### check type
-        msg = sz.deserialize(request)
-        resp_msg.addCode(random.randint(1,2)) # just for now 
-        if resp_msg.code == "OK": 
-          resp_msg.contents = "You are healthy!"
+        if sz.reqtype(request) == "ORDER":
+            resp_msg = sz.deserialize(request)
+            #resp_msg.addCode(random.randint(1,2)) # just for now 
+            #resp_msg.code = "OK": 
+            #resp_msg.contents = "Your order is placed!"
+            resp = self.gen_response_msg ()
+            resp.type = "RESPONSE"
+            resp.code = "OK"
+            resp.contents = "Your order is placed!"
         else
-          resp_msg.contents = "Bad Request!"
+            resp = self.gen_response_msg ()
+            resp.type = "RESPONSE"
+            resp.code = "BAD_REQUEST"
+            resp.contents = "Bad Request!"
 
-        resp = self.gen_response_msg ()
         self.grocery_obj.send_response (resp)
         
     except Exception as e:
