@@ -112,7 +112,7 @@ class CustomApplnProtocol ():
         #@TODO@ Implement this
         print ("serialize the message")
         start_time = time.time ()
-        if self.ser_type == SerializationType.JSON
+        if self.ser_type == SerializationType.JSON:
             buf = szjs.serialize (order)
         else:
             buf = szbf.serialize (order)
@@ -122,7 +122,7 @@ class CustomApplnProtocol ():
       else:  # Unknown; raise exception
         raise BadMessageType ()
 
-      self.xport_obj.send_appln_msg (order.dummy, len (order.dummy))
+      self.xport_obj.send_appln_msg (buf, len (buf))
     except Exception as e:
       raise e
 
@@ -144,7 +144,7 @@ class CustomApplnProtocol ():
         #@TODO@ Implement this
         print ("serialize the message")
         start_time = time.time ()
-        if self.ser_type == SerializationType.JSON
+        if self.ser_type == SerializationType.JSON:
             buf = szjs.serialize (order)
         else:
             buf = szbf.serialize (order)
@@ -154,7 +154,7 @@ class CustomApplnProtocol ():
       else:  # Unknown; raise exception
         raise BadMessageType ()
 
-      self.xport_obj.send_appln_msg (status.dummy, len (status.dummy))
+      self.xport_obj.send_appln_msg (buf, len (buf))
     except Exception as e:
       raise e
 
@@ -176,7 +176,7 @@ class CustomApplnProtocol ():
         #@TODO@ Implement this
         print ("serialize the message")
         start_time = time.time ()
-        if self.ser_type == SerializationType.JSON
+        if self.ser_type == SerializationType.JSON:
             buf = szjs.serialize (order)
         else:
             buf = szbf.serialize (order)
@@ -186,7 +186,7 @@ class CustomApplnProtocol ():
       else:  # Unknown; raise exception
         raise BadMessageType ()
 
-      self.xport_obj.send_appln_msg (response.dummy, len (response.dummy))
+      self.xport_obj.send_appln_msg (buf, len (buf))
     except Exception as e:
       raise e
 

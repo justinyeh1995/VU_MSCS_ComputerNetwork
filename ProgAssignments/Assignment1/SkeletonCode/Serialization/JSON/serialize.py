@@ -13,11 +13,8 @@ import sys
 
 import json # JSON package
 
-#from custom_msg import CustomMessage  # our custom message in native format
-#from custom_msg_local import GroceryOrderMessage, HealthStatusMessage, ResponseMessage
-from applnlayer.ApplnMessageTypes import GroceryOrderMessage
-from applnlayer.ApplnMessageTypes import HealthStatusMessage
-from applnlayer.ApplnMessageTypes import ResponseMessage
+from custom_msg import CustomMessage  # our custom message in native format
+from custom_msg_local import GroceryOrderMessage, HealthStatusMessage, ResponseMessage
 
 # This is the method we will invoke from our driver program to convert a data structure
 # in native format to JSON
@@ -64,9 +61,4 @@ def deserialize (buf):
 
   return cm
     
-def checktype (buf):
-
-  # get the json representation from the incoming buffer
-  return json.loads (buf) ["type"]
-
     

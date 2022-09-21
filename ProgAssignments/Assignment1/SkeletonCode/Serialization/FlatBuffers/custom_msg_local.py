@@ -1,33 +1,14 @@
-# Sample code for CS4283-5283
-# Vanderbilt University
+# CS4283/5283: Computer Networks
 # Instructor: Aniruddha Gokhale
 # Created: Fall 2022
-# 
-# Purpose: Provides the definition of supported messages
+#
 # Purpose: Define a native representation of a custom message format
 #          that will then undergo serialization/deserialization
 #
 
-# import the needed packages
-import sys
-from enum import Enum  # for enumerated types
-# @TODO import whatever more packages are needed
-from typing import List, Dict
+from typing import List, Dict 
 from dataclasses import dataclass
-
-# add to the python system path so that packages can be found relative to
-# this directory
-sys.path.insert (0, "../")
-
-############################################
-#  Enumeration for Message Types
-############################################
-class MessageTypes (Enum):
-  # One can extend this as needed. For now only these two
-  UNKNOWN = -1
-  GROCERY = 1
-  HEALTH = 2
-  RESPONSE = 3
+from enum import Enum  # for enumerated types
 
 '''
   type: str
@@ -224,7 +205,6 @@ class GroceryOrderMessage:
     print (f"\t\t\t{self.contents['bread']}")
     print (f"\t\tmeat:")
     print (f"\t\t\t{self.contents['meat']}")
-    return "Nice" 
 
 ############################################
 #  Health Status Message
@@ -326,7 +306,7 @@ class ResponseMessage:
   # @TODO - the above is simply to test the code. You need to get rid of that dummy
   # and replace it with the data struture we have for the response message 
   # as represented in the host (as a Python language data structure)
-  type: str
+  type: str # not sure on this one
   code: str
   contents: str
   

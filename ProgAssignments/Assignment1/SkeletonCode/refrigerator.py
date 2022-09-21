@@ -121,7 +121,7 @@ class Refrigerator ():
 
     groc_msg.addContent(content)
 
-    groc_msg.__str__()
+    #groc_msg.__str__()
 
     # fill up the fields in whatever way you want
     print("Done!")  
@@ -147,7 +147,7 @@ class Refrigerator ():
 
     status_msg.addContent(status)
 
-    status_msg.__str__()
+    #status_msg.__str__()
     # fill up the fields in whatever way you want
     print("Done!")  
 

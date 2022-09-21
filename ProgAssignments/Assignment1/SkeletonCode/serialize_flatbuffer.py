@@ -23,9 +23,12 @@ import numpy as np  # to use in our vector field
 
 import zmq   # we need this for additional constraints provided by the zmq serialization
 
-from custom_msg import CustomMessage  # our custom message in native format
-from custom_msg_local import GroceryOrderMessage, HealthStatusMessage, ResponseMessage # used in deserialization here
-import CustomAppProto.Message as msg   # this is the generated code by the flatc compiler
+#from custom_msg import CustomMessage  # our custom message in native format
+#from custom_msg_local import GroceryOrderMessage, HealthStatusMessage, ResponseMessage # used in deserialization here
+#import CustomAppProto.Message as msg   # this is the generated code by the flatc compiler
+from applnlayer.ApplnMessageTypes import GroceryOrderMessage
+from applnlayer.ApplnMessageTypes import HealthStatusMessage
+from applnlayer.ApplnMessageTypes import ResponseMessage
 
 import Proto.HealthStatusProto.Message as health   # this is the generated code by the flatc compiler
 import Proto.HealthStatusProto.Contents as contents   # this is the generated code by the flatc compiler
@@ -48,8 +51,8 @@ import Proto.GroceryOrderProto.Grocery as grocery
 import Proto.ResponseProto.Message as res
 import Proto.ResponseProto.reqStatus as reqstatus
 #
-import CustomAppProto.Message as msg   # this is the generated code by the flatc compiler
-from custom_msg_local import GroceryOrderMessage, HealthStatusMessage, ResponseMessage
+#import CustomAppProto.Message as msg   # this is the generated code by the flatc compiler
+#from custom_msg_local import GroceryOrderMessage, HealthStatusMessage, ResponseMessage
 
 # This is the method we will invoke from our driver program
 # Note that if you have have multiple different message types, we could have
@@ -317,3 +320,7 @@ def deserialize_from_frames (recvd_seq):
   # custom message
   return cm
     
+# deserialize the incoming serialized structure to find out message type
+def checktype (buf):
+    test_packet = health.Message.GetRootAs(buf, 0)
+    return test_packet.Type() 

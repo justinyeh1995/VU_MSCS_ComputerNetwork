@@ -21,6 +21,8 @@ import time   # for sleep
 import argparse # for argument parsing
 import configparser # for configuration parsing
 import zmq # actually not needed here but we are printing zmq version and hence needed
+import serialize_flatbuffer as szbf  # this is from the file serialize.py in the same directory
+import serialize_json as szjs  # this is from the file serialize.py in the same directory
 
 # add to the python system path so that the following packages can be found
 # relative to this directory
@@ -43,6 +45,7 @@ class GroceryOrder ():
   ########################################
   def __init__ (self):
     self.grocery_obj = None
+    self.ser_type = "json"
 
   ########################################
   # configure/initialize
@@ -63,6 +66,10 @@ class GroceryOrder ():
 
       # initialize the custom application objects
       self.grocery_obj.initialize (config, args.addr, args.port)
+        
+      # not sure this workflow is good enough
+      self.ser_type = config["Application"]["Serialization"]
+
 
     except Exception as e:
       raise e
@@ -101,7 +108,7 @@ class GroceryOrder ():
         """ deserialize here"""
         """if ...: do sth // else: send badRequest"""
         ### check type
-        if sz.reqtype(request) == "ORDER":
+        if szfb.checktype(request) == b"ORDER":
             resp_msg = sz.deserialize(request)
             #resp_msg.addCode(random.randint(1,2)) # just for now 
             #resp_msg.code = "OK": 
@@ -110,7 +117,7 @@ class GroceryOrder ():
             resp.type = "RESPONSE"
             resp.code = "OK"
             resp.contents = "Your order is placed!"
-        else
+        else:
             resp = self.gen_response_msg ()
             resp.type = "RESPONSE"
             resp.code = "BAD_REQUEST"
