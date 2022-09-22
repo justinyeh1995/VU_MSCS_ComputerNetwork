@@ -37,7 +37,7 @@ def serialize (cm):
         "contents": cm.contents
       }
   else:
-      json_buf = { "code": cm.code.name, "contents": c.contents }
+      json_buf = {"type": cm.type, "code": cm.code, "contents": cm.contents }
 
   # return the underlying jsonified buffer
   return json.dumps(json_buf)

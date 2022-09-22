@@ -108,8 +108,17 @@ class GroceryOrder ():
         """ deserialize here"""
         """if ...: do sth // else: send badRequest"""
         ### check type
-        if szfb.checktype(request) == b"ORDER":
-            resp_msg = sz.deserialize(request)
+        if self.ser_type == "fbufs" and szfb.checktype(request) == b"ORDER":
+            resp_msg = szfb.deserialize(request)
+            #resp_msg.addCode(random.randint(1,2)) # just for now 
+            #resp_msg.code = "OK": 
+            #resp_msg.contents = "Your order is placed!"
+            resp = self.gen_response_msg ()
+            resp.type = "RESPONSE"
+            resp.code = "OK"
+            resp.contents = "Your order is placed!"
+        elif self.ser_type == "json" and szjs.checktype(request) == "ORDER":
+            resp_msg = szjs.deserialize(request)
             #resp_msg.addCode(random.randint(1,2)) # just for now 
             #resp_msg.code = "OK": 
             #resp_msg.contents = "Your order is placed!"

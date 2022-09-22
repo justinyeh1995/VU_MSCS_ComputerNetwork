@@ -21,7 +21,8 @@ import time   # for sleep
 import argparse # for argument parsing
 import configparser # for configuration parsing
 import zmq # actually not needed here but we are printing zmq version and hence needed
-import serialize as sz
+import serialize_flatbuffer as szbf  # this is from the file serialize.py in the same directory
+import serialize_json as szjs  # this is from the file serialize.py in the same directory
 
 # add to the python system path so that the following packages can be found
 # relative to this directory
@@ -43,6 +44,7 @@ class HealthStatus ():
   ########################################
   def __init__ (self):
     self.health_obj = None
+    self.ser_type = "json"
 
   ########################################
   # configure/initialize
@@ -64,6 +66,9 @@ class HealthStatus ():
       # initialize the custom application objects
       self.health_obj.initialize (config, args.addr, args.port)
 
+      # not sure this workflow is good enough
+      self.ser_type = config["Application"]["Serialization"]
+
     except Exception as e:
       raise e
 
@@ -79,13 +84,8 @@ class HealthStatus ():
     
     resp_msg = ResponseMessage ()
     resp_msg.type = "RESPONSE"
-    resp_msg.addCode(random.randint(1,2)) # just for now 
-    if resp_msg.code == "OK": 
-      resp_msg.contents = "You are healthy!"
-    else
-      resp_msg.contents = "Bad Request!"
     # fill up the fields in whatever way you want
-    resp_msg.__str__ ()    
+    #resp_msg.__str__ ()    
     return resp_msg
   
   ##################################
@@ -104,7 +104,25 @@ class HealthStatus ():
         request = self.health_obj.recv_request ()
         print ("Received request: {}".format (request))
 
-        resp = self.gen_response_msg ()
+        ### check type
+        if self.ser_type == "fbufs" and szfb.checktype(request) == b"HEALTH":
+            resp_msg = szfb.deserialize(request)
+            resp = self.gen_response_msg ()
+            resp.type = "RESPONSE"
+            resp.code = "OK"
+            resp.contents = "Your are healthy!"
+        elif self.ser_type == "json" and szjs.checktype(request) == "HEALTH":
+            resp_msg = szjs.deserialize(request)
+            resp = self.gen_response_msg ()
+            resp.type = "RESPONSE"
+            resp.code = "OK"
+            resp.contents = "Your are healthy!"
+        else:
+            resp = self.gen_response_msg ()
+            resp.type = "RESPONSE"
+            resp.code = "BAD_REQUEST"
+            resp.contents = "Bad Request!"
+
         self.health_obj.send_response (resp)
         
     except Exception as e:
@@ -149,7 +167,8 @@ def main ():
     # Now drive the rest of the assignment
     print ("HealthStatus main: invoke driver")
     hs.driver ()
-
+    
+    print("health server has done its job")
     # we are done. collect results and do the plotting etc.
     #
     # @TODO@ Add code here.

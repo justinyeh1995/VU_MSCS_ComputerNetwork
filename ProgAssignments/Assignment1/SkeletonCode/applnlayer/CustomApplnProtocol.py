@@ -145,9 +145,9 @@ class CustomApplnProtocol ():
         print ("serialize the message")
         start_time = time.time ()
         if self.ser_type == SerializationType.JSON:
-            buf = szjs.serialize (order)
+            buf = szjs.serialize (status)
         else:
-            buf = szbf.serialize (order)
+            buf = szbf.serialize (status)
         end_time = time.time ()
         print ("Serialization took {} secs".format (end_time-start_time))
 
@@ -177,9 +177,9 @@ class CustomApplnProtocol ():
         print ("serialize the message")
         start_time = time.time ()
         if self.ser_type == SerializationType.JSON:
-            buf = szjs.serialize (order)
+            buf = szjs.serialize (response)
         else:
-            buf = szbf.serialize (order)
+            buf = szbf.serialize (response)
         end_time = time.time ()
         print ("Serialization took {} secs".format (end_time-start_time))
 
