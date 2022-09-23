@@ -54,7 +54,7 @@
 
 ### How to run Hw1
 
-```sh=
+```sh
 sudo mn -C && sudo mn --topo=single,3--link=tc,delay=10ms
 ```
 
