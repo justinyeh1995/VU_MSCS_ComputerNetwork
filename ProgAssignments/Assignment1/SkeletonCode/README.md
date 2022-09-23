@@ -54,11 +54,6 @@
 
 ### How to run Hw1
 
-* npm
-  ```sh
-  npm install npm@latest -g
-  ```
-
 ```sh=
 sudo mn -C && sudo mn --topo=single,3--link=tc,delay=10ms
 ```
