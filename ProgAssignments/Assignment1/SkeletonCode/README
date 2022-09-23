@@ -54,22 +54,22 @@
 
 ### How to run Hw1
 
-```bash=
+```sh=
 sudo mn -C && sudo mn --topo=single,3--link=tc,delay=10ms
 ```
 
 in the mininet cli
 
-```bash=
+```sh=
 source command.sh
 ``` 
 
 same with 
-```bash=
+```sh=
 sudo mn --topo=linear,3--link=tc,delay=10ms 
 ```
 &
-```bash=
+```sh=
 sudo mn --topo=tree,depth=3,fanout=3 --link=tc,delay=10ms
 ```
 
