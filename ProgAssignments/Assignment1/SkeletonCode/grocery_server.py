@@ -21,7 +21,7 @@ import time   # for sleep
 import argparse # for argument parsing
 import configparser # for configuration parsing
 import zmq # actually not needed here but we are printing zmq version and hence needed
-import serialize_flatbuffer as szbf  # this is from the file serialize.py in the same directory
+import serialize_flatbuffer as szfb  # this is from the file serialize.py in the same directory
 import serialize_json as szjs  # this is from the file serialize.py in the same directory
 
 # add to the python system path so that the following packages can be found
@@ -110,18 +110,12 @@ class GroceryOrder ():
         ### check type
         if self.ser_type == "fbufs" and szfb.checktype(request) == b"ORDER":
             resp_msg = szfb.deserialize(request)
-            #resp_msg.addCode(random.randint(1,2)) # just for now 
-            #resp_msg.code = "OK": 
-            #resp_msg.contents = "Your order is placed!"
             resp = self.gen_response_msg ()
             resp.type = "RESPONSE"
             resp.code = "OK"
             resp.contents = "Your order is placed!"
         elif self.ser_type == "json" and szjs.checktype(request) == "ORDER":
             resp_msg = szjs.deserialize(request)
-            #resp_msg.addCode(random.randint(1,2)) # just for now 
-            #resp_msg.code = "OK": 
-            #resp_msg.contents = "Your order is placed!"
             resp = self.gen_response_msg ()
             resp.type = "RESPONSE"
             resp.code = "OK"

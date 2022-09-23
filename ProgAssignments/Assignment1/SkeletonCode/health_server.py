@@ -21,7 +21,7 @@ import time   # for sleep
 import argparse # for argument parsing
 import configparser # for configuration parsing
 import zmq # actually not needed here but we are printing zmq version and hence needed
-import serialize_flatbuffer as szbf  # this is from the file serialize.py in the same directory
+import serialize_flatbuffer as szfb  # this is from the file serialize.py in the same directory
 import serialize_json as szjs  # this is from the file serialize.py in the same directory
 
 # add to the python system path so that the following packages can be found

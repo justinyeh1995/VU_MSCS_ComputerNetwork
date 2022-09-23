@@ -31,7 +31,7 @@ from applnlayer.ApplnMessageTypes import HealthStatusMessage
 from applnlayer.ApplnMessageTypes import ResponseMessage
 
 import Proto.HealthStatusProto.Message as health   # this is the generated code by the flatc compiler
-import Proto.HealthStatusProto.Contents as contents   # this is the generated code by the flatc compiler
+import Proto.HealthStatusProto.Contents as content   # this is the generated code by the flatc compiler
 import Proto.HealthStatusProto.Decision as decision
 import Proto.HealthStatusProto.Status as status
 
@@ -199,22 +199,22 @@ def serialize (cm):
         else:
             sensorStatus = status.Status().BAD
 
-        health.AddContents (builder, contents.CreateContents(builder, dispenser, cm.contents["icemaker"], lightbulb, 
-            cm.contents["fridge_temp"], cm.contents["freezer_temp"], sensorStatus))
+        health.AddContents(builder, content.CreateContents(builder, dispenser, cm.contents["icemaker"], lightbulb, cm.contents["fridge_temp"], cm.contents["freezer_temp"], sensorStatus))
         health.AddType (builder, type_)
         #health.AddContents (builder, ct)
         serialized_msg = health.End (builder)
 
     elif cm.type == "RESPONSE":
+        contents = builder.CreateString (cm.contents)
         res.Start(builder)
         # @TODO@
         if cm.code == "OK":
             code = reqstatus.reqStatus().OK    
-        elif cm.code == "PARTIAL":
+        elif cm.code == "BAD_REQUEST":
             code = reqstatus.reqStatus().BAD_REQUEST   
         res.AddType (builder, type_)
         res.AddCode (builder, code)
-        res.AddContents(builder, cm.contents)
+        res.AddContents(builder, contents)
         serialized_msg = res.End(builder)
 
     # end the serialization process
@@ -238,6 +238,7 @@ def serialize_to_frames (cm):
   
 # deserialize the incoming serialized structure into native data type
 def deserialize (buf):
+    print(type(buf))
     test_packet = health.Message.GetRootAs(buf, 0)
     if test_packet.Type() == b"ORDER":
         cm = GroceryOrderMessage()

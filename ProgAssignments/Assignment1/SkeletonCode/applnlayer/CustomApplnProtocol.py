@@ -20,7 +20,7 @@ from enum import Enum  # for enumerated types
 sys.path.insert (0, "../")
 
 from transportlayer.CustomTransportProtocol import CustomTransportProtocol as XPortProtoObj
-import serialize_flatbuffer as szbf  # this is from the file serialize.py in the same directory
+import serialize_flatbuffer as szfb  # this is from the file serialize.py in the same directory
 import serialize_json as szjs  # this is from the file serialize.py in the same directory
 
 ############################################
@@ -115,13 +115,13 @@ class CustomApplnProtocol ():
         if self.ser_type == SerializationType.JSON:
             buf = szjs.serialize (order)
         else:
-            buf = szbf.serialize (order)
+            buf = szfb.serialize (order)
         end_time = time.time ()
         print ("Serialization took {} secs".format (end_time-start_time))
 
       else:  # Unknown; raise exception
         raise BadMessageType ()
-
+      print(type(buf))
       self.xport_obj.send_appln_msg (buf, len (buf))
     except Exception as e:
       raise e
@@ -147,7 +147,7 @@ class CustomApplnProtocol ():
         if self.ser_type == SerializationType.JSON:
             buf = szjs.serialize (status)
         else:
-            buf = szbf.serialize (status)
+            buf = szfb.serialize (status)
         end_time = time.time ()
         print ("Serialization took {} secs".format (end_time-start_time))
 
@@ -179,7 +179,7 @@ class CustomApplnProtocol ():
         if self.ser_type == SerializationType.JSON:
             buf = szjs.serialize (response)
         else:
-            buf = szbf.serialize (response)
+            buf = szfb.serialize (response)
         end_time = time.time ()
         print ("Serialization took {} secs".format (end_time-start_time))
 

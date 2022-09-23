@@ -101,7 +101,10 @@ class CustomNetworkProtocol ():
       # Here, we simply delegate to our ZMQ socket to send the info
       print ("Custom Network Protocol::send_packet")
       # @TODO@ - this may need mod depending on json or serialized packet
-      self.socket.send (bytes(packet, "utf-8"))
+      if self.config["Application"]["Serialization"] == "json":
+        self.socket.send (bytes(packet, "utf-8"))
+      else:
+        self.socket.send (packet)
 
     except Exception as e:
       raise e
