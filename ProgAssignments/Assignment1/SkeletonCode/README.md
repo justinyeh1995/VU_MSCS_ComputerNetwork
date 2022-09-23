@@ -55,7 +55,7 @@
 ### How to run Hw1
 
 ```sh=
-sudo mn -C && sudo mn --topo=single,3--link=tc,delay=10ms
+sudo mn -c && sudo mn --topo=single,3 --link=tc,delay=10ms
 ```
 
 in the mininet cli
@@ -66,7 +66,7 @@ source command.sh
 
 same with 
 ```sh=
-sudo mn --topo=linear,3--link=tc,delay=10ms 
+sudo mn --topo=linear,3 --link=tc,delay=10ms 
 ```
 &
 ```sh=
