@@ -10,32 +10,51 @@ class Container(object):
     __slots__ = ['_tab']
 
     @classmethod
-    def SizeOf(cls):
-        return 24
+    def GetRootAs(cls, buf, offset=0):
+        n = flatbuffers.encode.Get(flatbuffers.packer.uoffset, buf, offset)
+        x = Container()
+        x.Init(buf, n + offset)
+        return x
 
+    @classmethod
+    def GetRootAsContainer(cls, buf, offset=0):
+        """This method is deprecated. Please switch to GetRootAs."""
+        return cls.GetRootAs(buf, offset)
     # Container
     def Init(self, buf, pos):
         self._tab = flatbuffers.table.Table(buf, pos)
 
     # Container
-    def Cans(self, obj):
-        obj.Init(self._tab.Bytes, self._tab.Pos + 0)
-        return obj
+    def Cans(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
+        if o != 0:
+            x = o + self._tab.Pos
+            from Proto.GroceryOrderProto.Cans import Cans
+            obj = Cans()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
 
     # Container
-    def Bottles(self, obj):
-        obj.Init(self._tab.Bytes, self._tab.Pos + 12)
-        return obj
+    def Bottles(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
+        if o != 0:
+            x = o + self._tab.Pos
+            from Proto.GroceryOrderProto.Bottles import Bottles
+            obj = Bottles()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
 
-
-def CreateContainer(builder, cans_coke, cans_beer, cans_soda, bottles_sprite, bottles_gingerale, bottles_sevenup):
-    builder.Prep(4, 24)
-    builder.Prep(4, 12)
-    builder.PrependUint32(bottles_sevenup)
-    builder.PrependUint32(bottles_gingerale)
-    builder.PrependUint32(bottles_sprite)
-    builder.Prep(4, 12)
-    builder.PrependUint32(cans_soda)
-    builder.PrependUint32(cans_beer)
-    builder.PrependUint32(cans_coke)
-    return builder.Offset()
+def ContainerStart(builder): builder.StartObject(2)
+def Start(builder):
+    return ContainerStart(builder)
+def ContainerAddCans(builder, cans): builder.PrependStructSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(cans), 0)
+def AddCans(builder, cans):
+    return ContainerAddCans(builder, cans)
+def ContainerAddBottles(builder, bottles): builder.PrependStructSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(bottles), 0)
+def AddBottles(builder, bottles):
+    return ContainerAddBottles(builder, bottles)
+def ContainerEnd(builder): return builder.EndObject()
+def End(builder):
+    return ContainerEnd(builder)

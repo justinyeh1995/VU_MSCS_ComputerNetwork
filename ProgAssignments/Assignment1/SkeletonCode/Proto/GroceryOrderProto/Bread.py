@@ -10,21 +10,43 @@ class Bread(object):
     __slots__ = ['_tab']
 
     @classmethod
-    def SizeOf(cls):
-        return 8
+    def GetRootAs(cls, buf, offset=0):
+        n = flatbuffers.encode.Get(flatbuffers.packer.uoffset, buf, offset)
+        x = Bread()
+        x.Init(buf, n + offset)
+        return x
 
+    @classmethod
+    def GetRootAsBread(cls, buf, offset=0):
+        """This method is deprecated. Please switch to GetRootAs."""
+        return cls.GetRootAs(buf, offset)
     # Bread
     def Init(self, buf, pos):
         self._tab = flatbuffers.table.Table(buf, pos)
 
     # Bread
-    def Type(self): return self._tab.Get(flatbuffers.number_types.Int8Flags, self._tab.Pos + flatbuffers.number_types.UOffsetTFlags.py_type(0))
-    # Bread
-    def Quantity(self): return self._tab.Get(flatbuffers.number_types.Float32Flags, self._tab.Pos + flatbuffers.number_types.UOffsetTFlags.py_type(4))
+    def Type(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Int8Flags, o + self._tab.Pos)
+        return 2
 
-def CreateBread(builder, type, quantity):
-    builder.Prep(4, 8)
-    builder.PrependFloat32(quantity)
-    builder.Pad(3)
-    builder.PrependInt8(type)
-    return builder.Offset()
+    # Bread
+    def Quantity(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
+        return 10.0
+
+def BreadStart(builder): builder.StartObject(2)
+def Start(builder):
+    return BreadStart(builder)
+def BreadAddType(builder, type): builder.PrependInt8Slot(0, type, 2)
+def AddType(builder, type):
+    return BreadAddType(builder, type)
+def BreadAddQuantity(builder, quantity): builder.PrependFloat32Slot(1, quantity, 10.0)
+def AddQuantity(builder, quantity):
+    return BreadAddQuantity(builder, quantity)
+def BreadEnd(builder): return builder.EndObject()
+def End(builder):
+    return BreadEnd(builder)

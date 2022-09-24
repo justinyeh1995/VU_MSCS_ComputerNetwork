@@ -10,21 +10,43 @@ class Milk(object):
     __slots__ = ['_tab']
 
     @classmethod
-    def SizeOf(cls):
-        return 8
+    def GetRootAs(cls, buf, offset=0):
+        n = flatbuffers.encode.Get(flatbuffers.packer.uoffset, buf, offset)
+        x = Milk()
+        x.Init(buf, n + offset)
+        return x
 
+    @classmethod
+    def GetRootAsMilk(cls, buf, offset=0):
+        """This method is deprecated. Please switch to GetRootAs."""
+        return cls.GetRootAs(buf, offset)
     # Milk
     def Init(self, buf, pos):
         self._tab = flatbuffers.table.Table(buf, pos)
 
     # Milk
-    def Type(self): return self._tab.Get(flatbuffers.number_types.Int8Flags, self._tab.Pos + flatbuffers.number_types.UOffsetTFlags.py_type(0))
-    # Milk
-    def Quantity(self): return self._tab.Get(flatbuffers.number_types.Float32Flags, self._tab.Pos + flatbuffers.number_types.UOffsetTFlags.py_type(4))
+    def Type(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Int8Flags, o + self._tab.Pos)
+        return 5
 
-def CreateMilk(builder, type, quantity):
-    builder.Prep(4, 8)
-    builder.PrependFloat32(quantity)
-    builder.Pad(3)
-    builder.PrependInt8(type)
-    return builder.Offset()
+    # Milk
+    def Quantity(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
+        return 12.0
+
+def MilkStart(builder): builder.StartObject(2)
+def Start(builder):
+    return MilkStart(builder)
+def MilkAddType(builder, type): builder.PrependInt8Slot(0, type, 5)
+def AddType(builder, type):
+    return MilkAddType(builder, type)
+def MilkAddQuantity(builder, quantity): builder.PrependFloat32Slot(1, quantity, 12.0)
+def AddQuantity(builder, quantity):
+    return MilkAddQuantity(builder, quantity)
+def MilkEnd(builder): return builder.EndObject()
+def End(builder):
+    return MilkEnd(builder)

@@ -39,7 +39,7 @@ class Grocery(object):
     def Drinks(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
-            x = o + self._tab.Pos
+            x = self._tab.Indirect(o + self._tab.Pos)
             from Proto.GroceryOrderProto.Container import Container
             obj = Container()
             obj.Init(self._tab.Bytes, x)
@@ -51,7 +51,8 @@ class Grocery(object):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
             x = self._tab.Vector(o)
-            x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 8
+            x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
+            x = self._tab.Indirect(x)
             from Proto.GroceryOrderProto.Milk import Milk
             obj = Milk()
             obj.Init(self._tab.Bytes, x)
@@ -75,7 +76,8 @@ class Grocery(object):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
         if o != 0:
             x = self._tab.Vector(o)
-            x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 8
+            x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
+            x = self._tab.Indirect(x)
             from Proto.GroceryOrderProto.Bread import Bread
             obj = Bread()
             obj.Init(self._tab.Bytes, x)
@@ -99,7 +101,8 @@ class Grocery(object):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
         if o != 0:
             x = self._tab.Vector(o)
-            x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 8
+            x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
+            x = self._tab.Indirect(x)
             from Proto.GroceryOrderProto.Meat import Meat
             obj = Meat()
             obj.Init(self._tab.Bytes, x)
@@ -124,25 +127,25 @@ def Start(builder):
 def GroceryAddVeggies(builder, veggies): builder.PrependStructSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(veggies), 0)
 def AddVeggies(builder, veggies):
     return GroceryAddVeggies(builder, veggies)
-def GroceryAddDrinks(builder, drinks): builder.PrependStructSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(drinks), 0)
+def GroceryAddDrinks(builder, drinks): builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(drinks), 0)
 def AddDrinks(builder, drinks):
     return GroceryAddDrinks(builder, drinks)
 def GroceryAddMilk(builder, milk): builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(milk), 0)
 def AddMilk(builder, milk):
     return GroceryAddMilk(builder, milk)
-def GroceryStartMilkVector(builder, numElems): return builder.StartVector(8, numElems, 4)
+def GroceryStartMilkVector(builder, numElems): return builder.StartVector(4, numElems, 4)
 def StartMilkVector(builder, numElems):
     return GroceryStartMilkVector(builder, numElems)
 def GroceryAddBread(builder, bread): builder.PrependUOffsetTRelativeSlot(3, flatbuffers.number_types.UOffsetTFlags.py_type(bread), 0)
 def AddBread(builder, bread):
     return GroceryAddBread(builder, bread)
-def GroceryStartBreadVector(builder, numElems): return builder.StartVector(8, numElems, 4)
+def GroceryStartBreadVector(builder, numElems): return builder.StartVector(4, numElems, 4)
 def StartBreadVector(builder, numElems):
     return GroceryStartBreadVector(builder, numElems)
 def GroceryAddMeat(builder, meat): builder.PrependUOffsetTRelativeSlot(4, flatbuffers.number_types.UOffsetTFlags.py_type(meat), 0)
 def AddMeat(builder, meat):
     return GroceryAddMeat(builder, meat)
-def GroceryStartMeatVector(builder, numElems): return builder.StartVector(8, numElems, 4)
+def GroceryStartMeatVector(builder, numElems): return builder.StartVector(4, numElems, 4)
 def StartMeatVector(builder, numElems):
     return GroceryStartMeatVector(builder, numElems)
 def GroceryEnd(builder): return builder.EndObject()
