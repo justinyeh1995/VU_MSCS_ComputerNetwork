@@ -1,3 +1,25 @@
+
+### How to run Hw1
+
+```sh=
+sudo mn -c && sudo mn --topo=single,3 --link=tc,delay=10ms
+```
+
+in the mininet cli
+
+```sh=
+source command.sh
+``` 
+
+same with 
+```sh=
+sudo mn -c && sudo mn --topo=linear,3 --link=tc,delay=10ms 
+```
+&
+```sh=
+sudo mn -c && sudo mn --topo=tree,depth=3,fanout=3 --link=tc,delay=10ms
+```
+
 ################################################################################################
 #
 # Author: Aniruddha Gokhale
@@ -51,25 +73,3 @@
 #   Students should look at the @TODO@ markers in the different places of the code. This is
 #   where students need to supply code to do the actual work expected in this assignment
 #################################################################################################
-
-### How to run Hw1
-
-```sh=
-sudo mn -c && sudo mn --topo=single,3 --link=tc,delay=10ms
-```
-
-in the mininet cli
-
-```sh=
-source command.sh
-``` 
-
-same with 
-```sh=
-sudo mn --topo=linear,3 --link=tc,delay=10ms 
-```
-&
-```sh=
-sudo mn --topo=tree,depth=3,fanout=3 --link=tc,delay=10ms
-```
-
