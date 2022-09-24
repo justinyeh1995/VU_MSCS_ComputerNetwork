@@ -105,21 +105,12 @@ class HealthStatus ():
         print ("Received request: {}".format (request))
 
         ### check type
-        if self.ser_type == "fbufs" and szfb.checktype(request) == b"HEALTH":
-            resp_msg = szfb.deserialize(request)
+        if (self.ser_type == "fbufs" and request.type == b"HEALTH") or (self.ser_type == "json" and request.type == "HEALTH"):
             resp = self.gen_response_msg ()
-            resp.type = "RESPONSE"
-            resp.code = "OK"
-            resp.contents = "Your are healthy!"
-        elif self.ser_type == "json" and szjs.checktype(request) == "HEALTH":
-            resp_msg = szjs.deserialize(request)
-            resp = self.gen_response_msg ()
-            resp.type = "RESPONSE"
             resp.code = "OK"
             resp.contents = "Your are healthy!"
         else:
             resp = self.gen_response_msg ()
-            resp.type = "RESPONSE"
             resp.code = "BAD_REQUEST"
             resp.contents = "Bad Request!"
 

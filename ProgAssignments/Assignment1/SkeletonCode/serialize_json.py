@@ -64,9 +64,3 @@ def deserialize (buf):
 
   return cm
     
-def checktype (buf):
-
-  # get the json representation from the incoming buffer
-  return json.loads (buf) ["type"]
-
-    

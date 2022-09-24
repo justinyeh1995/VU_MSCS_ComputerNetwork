@@ -38,6 +38,9 @@ import Proto.HealthStatusProto.Status as status
 import Proto.GroceryOrderProto.Message as order   # this is the generated code by the flatc compiler
 import Proto.GroceryOrderProto.Bottles as bottles
 import Proto.GroceryOrderProto.Cans as cans
+import Proto.GroceryOrderProto.Cans as cans
+import Proto.GroceryOrderProto.Cans as cans
+import Proto.GroceryOrderProto.Cans as cans
 import Proto.GroceryOrderProto.Container as container
 import Proto.GroceryOrderProto.Veggies as veggies
 import Proto.GroceryOrderProto.Milk as milk
@@ -48,7 +51,7 @@ import Proto.GroceryOrderProto.Meat as meat
 import Proto.GroceryOrderProto.MeatType as meattype
 import Proto.GroceryOrderProto.Grocery as grocery
 
-import Proto.ResponseProto.Message as res
+import Proto.ResponseProto.Message as response
 import Proto.ResponseProto.reqStatus as reqstatus
 #
 #import CustomAppProto.Message as msg   # this is the generated code by the flatc compiler
@@ -66,7 +69,6 @@ def serialize (cm):
 
     # create the name string for the name field using
     # the parameter we passed
-    #name_field = builder.CreateString (cm.name)
     # build it bottom up
     
     type_ = builder.CreateString (cm.type)
@@ -74,33 +76,9 @@ def serialize (cm):
     if cm.type == "ORDER":
        # create logic for native msg -> flatbuffer msg
         # @TODO@
-        #grocery.Start(builder)
-
-        #Bottles = bottles.CreateBottles(builder,cm.contents["drinks"]["bottles"]["Sprite"],
-        #                                      cm.contents["drinks"]["bottles"]["Gingerale"],
-        #                                      cm.contents["drinks"]["bottles"]["SevenUp"]
-        #                                      )
-        #Cans = cans.CreateCans(builder,cm.contents["drinks"]["cans"]["coke"],
-        #                               cm.contents["drinks"]["cans"]["beer"],
-        #                               cm.contents["drinks"]["cans"]["soda"]
-        #                               )
-        ##Drinks = drinks.CreateDrinks(builder,Cans,Bottles)
-        #Drinks = container.CreateContainer(builder,cm.contents["drinks"]["cans"]["coke"],
-        #                                           cm.contents["drinks"]["cans"]["beer"],
-        #                                           cm.contents["drinks"]["cans"]["soda"],
-        #                                           cm.contents["drinks"]["bottles"]["Sprite"],
-        #                                           cm.contents["drinks"]["bottles"]["Gingerale"],
-        #                                           cm.contents["drinks"]["bottles"]["SevenUp"]
-        #                                          )
-        #Veggies = veggies.CreateVeggies(builder, cm.contents["veggies"]["tomato"], 
-        #                                         cm.contents["veggies"]["cucumber"],
-        #                                         cm.contents["veggies"]["potato"],
-        #                                         cm.contents["veggies"]["bokchoy"],
-        #                                         cm.contents["veggies"]["broccoli"]
-        #                                         )
-
         MilkOrder = []
         for item in cm.contents["milk"]:
+            milk.Start(builder)
             if item["type"] == "ONE_PCT":
                 itemtype = milktype.MilkType.ONE_PCT
             elif item["type"] == "TWO_PCT":
@@ -113,7 +91,10 @@ def serialize (cm):
                 itemtype = milktype.MilkType.CASHEW
             elif item["type"] == "OAT":
                 itemtype = milktype.MilkType.OAT
-            MilkOrder.append(milk.CreateMilk(builder, itemtype, item["quantity"]))
+            milk.AddType(builder, itemtype)
+            milk.AddQuantity(builder,item["quantity"])
+            milk_ = milk.End(builder)
+            MilkOrder.append(milk_)
 
         grocery.StartMilkVector(builder, len(MilkOrder))
         for i in reversed(range(len(MilkOrder))):
@@ -122,13 +103,17 @@ def serialize (cm):
 
         BreadOrder = []
         for item in cm.contents["bread"]:
+            bread.Start(builder)
             if item["type"] == "WHOLE_WEAT":
                 itemtype = breadtype.BreadType.WHOLE_WEAT
             elif item["type"] == "PUMPERNICKEL":
                 itemtype = breadtype.BreadType.PUMPERNICKEL
             elif item["type"] == "RYE":
                 itemtype = breadtype.BreadType.RYE
-            BreadOrder.append(bread.CreateBread(builder, itemtype, item["quantity"]))
+            bread.AddType(builder, itemtype)
+            bread.AddQuantity(builder,item["quantity"])
+            bread_ = bread.End(builder)
+            BreadOrder.append(bread_)
 
         grocery.StartBreadVector(builder, len(BreadOrder))
         for i in reversed(range(len(BreadOrder))):
@@ -137,6 +122,7 @@ def serialize (cm):
 
         MeatOrder = []
         for item in cm.contents["meat"]:
+            meat.Start(builder)
             if item["type"] == "PORK":
                 itemtype = meattype.MeatType.PORK
             elif item["type"] == "LAMB":
@@ -145,12 +131,28 @@ def serialize (cm):
                 itemtype = meattype.MeatType.CHICKEN
             elif item["type"] == "BEEF":
                 itemtype = meattype.MeatType.BEEF
-            MeatOrder.append(meat.CreateMeat(builder, itemtype, item["quantity"]))
+            meat.AddType(builder, itemtype)
+            meat.AddQuantity(builder,item["quantity"])
+            meat_ = meat.End(builder)
+            MeatOrder.append(meat_)
         grocery.StartMeatVector(builder, len(MeatOrder))
         for i in reversed(range(len(MeatOrder))):
             builder.PrependUOffsetTRelative (MeatOrder[i])
         Meat = builder.EndVector()
-
+        
+        container.Start (builder)
+        container.AddCans (builder, cans.CreateCans(builder,
+                                                cm.contents["drinks"]["cans"]["coke"],
+                                                cm.contents["drinks"]["cans"]["beer"],
+                                                cm.contents["drinks"]["cans"]["soda"]
+                                                ))
+        container.AddBottles (builder, bottles.CreateBottles(builder,
+                                                cm.contents["drinks"]["bottles"]["Sprite"],
+                                                cm.contents["drinks"]["bottles"]["Gingerale"],
+                                                cm.contents["drinks"]["bottles"]["SevenUp"]
+                                                ))
+        Drinks = container.End (builder)
+        
         grocery.Start(builder)
 
         grocery.AddVeggies (builder,veggies.CreateVeggies(builder, 
@@ -160,14 +162,7 @@ def serialize (cm):
                                                  cm.contents["veggies"]["bokchoy"],
                                                  cm.contents["veggies"]["broccoli"]
                                                  ))
-        grocery.AddDrinks (builder, container.CreateContainer(builder,
-                                                   cm.contents["drinks"]["cans"]["coke"],
-                                                   cm.contents["drinks"]["cans"]["beer"],
-                                                   cm.contents["drinks"]["cans"]["soda"],
-                                                   cm.contents["drinks"]["bottles"]["Sprite"],
-                                                   cm.contents["drinks"]["bottles"]["Gingerale"],
-                                                   cm.contents["drinks"]["bottles"]["SevenUp"]
-                                                  ))
+        grocery.AddDrinks (builder, Drinks)
         grocery.AddMilk (builder, Milk)
         grocery.AddBread (builder, Bread)
         grocery.AddMeat (builder, Meat)
@@ -201,21 +196,20 @@ def serialize (cm):
 
         health.AddContents(builder, content.CreateContents(builder, dispenser, cm.contents["icemaker"], lightbulb, cm.contents["fridge_temp"], cm.contents["freezer_temp"], sensorStatus))
         health.AddType (builder, type_)
-        #health.AddContents (builder, ct)
         serialized_msg = health.End (builder)
 
     elif cm.type == "RESPONSE":
         contents = builder.CreateString (cm.contents)
-        res.Start(builder)
+        response.Start(builder)
         # @TODO@
         if cm.code == "OK":
             code = reqstatus.reqStatus().OK    
         elif cm.code == "BAD_REQUEST":
             code = reqstatus.reqStatus().BAD_REQUEST   
-        res.AddType (builder, type_)
-        res.AddCode (builder, code)
-        res.AddContents(builder, contents)
-        serialized_msg = res.End(builder)
+        response.AddType (builder, type_)
+        response.AddCode (builder, code)
+        response.AddContents(builder, contents)
+        serialized_msg = response.End(builder)
 
     # end the serialization process
     builder.Finish (serialized_msg)
@@ -265,6 +259,41 @@ def deserialize (buf):
                     "meat": []
                 }
         contents["veggies"]["tomato"] = packet.Contents().Veggies().Tomato()
+        contents["veggies"]["cucumber"] = packet.Contents().Veggies().Cucumber()
+        contents["veggies"]["potato"] = packet.Contents().Veggies().Potato()
+        contents["veggies"]["bokchoy"] = packet.Contents().Veggies().Bokchoy()
+        contents["veggies"]["broccoli"] = packet.Contents().Veggies().Broccoli()
+        contents["drinks"]["cans"]["coke"] = packet.Contents().Drinks().Cans().Coke()
+        contents["drinks"]["cans"]["beer"] = packet.Contents().Drinks().Cans().Beer()
+        contents["drinks"]["cans"]["soda"] = packet.Contents().Drinks().Cans().Soda()
+        contents["drinks"]["bottles"]["Sprite"] = packet.Contents().Drinks().Bottles().Sprite()
+        contents["drinks"]["bottles"]["Gingerale"] = packet.Contents().Drinks().Bottles().Gingerale()
+        contents["drinks"]["bottles"]["SevenUp"] = packet.Contents().Drinks().Bottles().Sevenup()
+        milk = []
+        milk_map = {
+            0:"ONE_PCT",
+            1:"TWO_PCT",
+            2:"FAT_FREE",
+            3:"WHOLE",
+            4:"CASHEW",
+            5:"OAT"}
+        for i in range(packet.Contents().MilkLength()): milk.append({"type": milk_map[packet.Contents().Milk(i).Type()], "quantity":packet.Contents().Milk(i).Quantity()})
+        bread = []
+        bread_map = {
+            0:"WHOLE_WEAT",
+            1:"PUMPERNICKEL",
+            2:"RYE"}
+        for i in range(packet.Contents().BreadLength()): bread.append({"type": bread_map[packet.Contents().Bread(i).Type()], "quantity":packet.Contents().Bread(i).Quantity()})
+        meat = []
+        meat_map = {
+            0:"PORK",
+            1:"LAMB",
+            2:"CHICKEN",
+            3:"BEEF"}
+        for i in range(packet.Contents().MeatLength()): meat.append({"type": meat_map[packet.Contents().Meat(i).Type()], "quantity":packet.Contents().Meat(i).Quantity()})
+        contents["milk"] = milk
+        contents["bread"] = bread
+        contents["meat"] = meat
         # @TO-DO@
         cm.contents = contents
     elif test_packet.Type() == b"HEALTH":
@@ -279,29 +308,33 @@ def deserialize (buf):
                 "freezer_temp": 0,
                 "sensor_status": ""
                 }
+        dispensor_map = {
+                0: "OPTIMAL",
+                1: "PARTIAL",
+                2: "BLOCKAGE"
+                }
+        status_map = {
+                0: "GOOD",
+                1: "BAD"
+                }
+        contents["dispenser"] = dispensor_map[packet.Contents().Dispenser()]
+        contents["icemaker"] = packet.Contents().Icemaker()
+        contents["lightbulb"] = status_map[packet.Contents().Lightbulb()]
+        contents["fridge_temp"] = packet.Contents().FridgeTemp()
+        contents["freezer_temp"] = packet.Contents().FreezerTemp()
+        contents["sensor_status"] = status_map[packet.Contents().SensorStatus()]
         # @TO-DO@
         cm.contents = contents
     elif test_packet.Type() == b"RESPONSE":
         cm = ResponseMessage()
-        packet = order.Message.GetRootAs(buf, 0)
-        cm.type = response.Type()
-        cm.code = packet.Code()
+        packet = response.Message.GetRootAs(buf, 0)
+        cm.type = packet.Type()
+        status_map = {
+                0: "OK",
+                1: "BAD_REQUEST"
+                }
+        cm.code = status_map[packet.Code()]
         cm.contents = packet.Contents()
-        # @TO-DO@
-    ## sequence number
-    #cm.seq_num = packet.SeqNo ()
-
-    ## timestamp received
-    #cm.ts = packet.Ts ()
-
-    ## name received
-    #cm.name = packet.Name ()
-
-    ## received vector data
-    ## We can obtain the vector like this but it changes the
-    ## type from List to NumpyArray, which may not be what one wants.
-    ##cm.vec = packet.DataAsNumpy ()
-    #cm.vec = [packet.Data (j) for j in range (packet.DataLength ())]
 
     return cm
     

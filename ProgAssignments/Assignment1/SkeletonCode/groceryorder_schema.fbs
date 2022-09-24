@@ -48,7 +48,7 @@ struct Bottles
   sevenup: uint32;
 }
 
-struct Container
+table Container
 {
   cans: Cans;
   bottles: Bottles;
@@ -63,10 +63,10 @@ enum MilkType: byte {
   OAT
 }
 
-struct Milk
+table Milk
 {
-  type: MilkType;
-  quantity: float;
+  type: MilkType= OAT;
+  quantity: float = 12;
 }
 
 enum BreadType: byte {
@@ -75,10 +75,10 @@ enum BreadType: byte {
   RYE
 }
 
-struct Bread 
+table Bread 
 {
-  type: BreadType;
-  quantity: float;
+  type: BreadType = RYE;
+  quantity: float = 10;
 }
 
 enum MeatType: byte {
@@ -88,10 +88,10 @@ enum MeatType: byte {
   BEEF
 }
 
-struct Meat 
+table Meat 
 {
-  type: MeatType;
-  quantity: float;
+  type: MeatType= BEEF;
+  quantity: float = 6;
 }
 
 table Grocery 
