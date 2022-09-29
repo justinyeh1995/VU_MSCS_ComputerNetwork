@@ -205,6 +205,10 @@ class CustomApplnProtocol ():
       # transport segments etc and so what we receive from ZMQ is the complete
       # message.
       request = self.xport_obj.recv_appln_msg ()
+      if self.ser_type == SerializationType.FBUFS:
+        request = szfb.deserialize(request)
+      else:
+        request = szjs.deserialize(request)
       return request
     except Exception as e:
       raise e
@@ -224,6 +228,10 @@ class CustomApplnProtocol ():
       # transport segments etc and so what we receive from ZMQ is the complete
       # message.
       response = self.xport_obj.recv_appln_msg ()
+      if self.ser_type == SerializationType.FBUFS:
+        response = szfb.deserialize(response)
+      else:
+        response = szjs.deserialize(response)
       return response
     except Exception as e:
       raise e

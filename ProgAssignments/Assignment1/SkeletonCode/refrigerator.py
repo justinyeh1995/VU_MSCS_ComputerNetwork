@@ -124,7 +124,7 @@ class Refrigerator ():
     #groc_msg.__str__()
 
     # fill up the fields in whatever way you want
-    print("Done!")  
+    print("Send Grocery Order!")  
 
     return groc_msg
   
@@ -149,7 +149,7 @@ class Refrigerator ():
 
     #status_msg.__str__()
     # fill up the fields in whatever way you want
-    print("Done!")  
+    print("Generate Health Message!")  
 
     return status_msg
   
@@ -276,5 +276,7 @@ if __name__ == '__main__':
   # here we just print the version numbers
   print("Current libzmq version is %s" % zmq.zmq_version())
   print("Current pyzmq version is %s" % zmq.pyzmq_version())
-
+  start = time.time()
   main ()
+  end = time.time() 
+  print(f"Total time: {end-start}")

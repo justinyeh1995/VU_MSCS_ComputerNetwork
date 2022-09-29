@@ -224,7 +224,7 @@ class GroceryOrderMessage:
     print (f"\t\t\t{self.contents['bread']}")
     print (f"\t\tmeat:")
     print (f"\t\t\t{self.contents['meat']}")
-    return "Nice" 
+    return "Groceries..." 
 
 ############################################
 #  Health Status Message
@@ -307,7 +307,7 @@ class HealthStatusMessage:
     print (f"\tContents: ")
     for key in self.contents:
         print (f"\t\t{key}: {self.contents[key]}")
-    return "Health Status" 
+    return "Health Status..." 
 ############################################
 #  Response Message
 ############################################
@@ -342,5 +342,5 @@ class ResponseMessage:
     #@TODO - remove the above print stmt and instead create a pretty print logic
     for key in self.__dict__:
         print(f"{key}: {self.__dict__.get(key)}")    
-    return "Response" 
+    return "Response..." 
 
