@@ -14,6 +14,9 @@ import os     # for OS functions
 import sys    # for syspath and system exception
 import time   # for sleep
 from enum import Enum  # for enumerated types
+import subprocess
+import re
+import pandas as pd
 
 # add to the python system path so that packages can be found relative to
 # this directory
@@ -22,6 +25,8 @@ sys.path.insert (0, "../")
 from transportlayer.CustomTransportProtocol import CustomTransportProtocol as XPortProtoObj
 import serialize_flatbuffer as szfb  # this is from the file serialize.py in the same directory
 import serialize_json as szjs  # this is from the file serialize.py in the same directory
+
+testDB = pd.read_csv("./RouteDB.csv")
 
 ############################################
 #  Serialization Enumeration Type
@@ -82,6 +87,17 @@ class CustomApplnProtocol ():
       else:  # Unknown; raise exception
         raise BadSerializationType (config["Application"]["Serialization"])
 
+      print("Obtaining the Next Hop Host Name")
+      ifconfig_output=(subprocess.check_output('ifconfig')).decode()
+      regex_ip=re.search(r"[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}",ifconfig_output)
+      h_ip = str(regex_ip.group(0))
+      ip2host = {f"10.0.0.{i}": f"H{i}" for i in range(1,10)}
+      host2ip = { f"H{i}": f"10.0.0.{i}" for i in range(1,10)}
+      print(f"Host IP is {ip2host[h_ip]}")
+      nexthost = testDB.loc[testDB.host==ip2host[h_ip]].loc[testDB.destination=="10.0.0.5"].nexthop.values[0] # replace "10.0.0.5" with final destination
+      print(testDB.loc[testDB.host==ip2host[h_ip]].loc[testDB.destination=="10.0.0.5"].nexthop.values[0]) # replace "10.0.0.5" with final destination
+      nextip = host2ip[nexthost]
+      print(nextip)
       # Now obtain our transport object
       # @TODO
       print ("Custom Appln Protocol::initialize - obtain transport object")
@@ -89,10 +105,21 @@ class CustomApplnProtocol ():
 
       # initialize it
       print ("Custom Appln Protocol::initialize - initialize transport object")
+      ### TO-DO: add next ip here
       self.xport_obj.initialize (config, ip, port)
       
     except Exception as e:
       raise e  # just propagate it
+
+    try:
+      #
+      print("Obtaining the Next Hop Host Name")
+      h_name = socket.gethostname()
+      print(f"Current Host Name is {h_name}")
+      ## @TO-DO@
+    except:
+      print ("Some exception occurred getting ROUTER host name...")
+      return
     
   ##################################
   #  send Grocery Order

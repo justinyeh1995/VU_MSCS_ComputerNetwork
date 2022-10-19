@@ -11,7 +11,7 @@
 # import the needed packages
 import os     # for OS functions
 import sys    # for syspath and system exception
-
+import socket # get host ip addr
 # add to the python system path so that packages can be found relative to
 # this directory
 sys.path.insert (0, "../")
@@ -84,6 +84,11 @@ class CustomNetworkProtocol ():
         self.socket = self.ctx.socket (zmq.REQ)
 
         # since we are client, we connect
+        
+        ##########################
+        ## Need to Look Up here ##
+        ##########################
+
         connect_str = "tcp://" + self.ip + ":" + str (self.port)
         print ("Custom Network Protocol Object: Initialize - connect socket to {}".format (connect_str))
         self.socket.connect (connect_str)

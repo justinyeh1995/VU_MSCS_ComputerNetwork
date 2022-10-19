@@ -5,19 +5,17 @@ import time   # for sleep
 import argparse # for argument parsing
 import configparser # for configuration parsing
 import zmq # actually not needed here but we are printing zmq version and hence needed
+import subprocess # for calling ifconfig
+import re # for parsing first inet addr
 import csv # for parsing the routing table
-
+import pands as pd
 # add to the python system path so that the following packages can be found
 # relative to this directory
 sys.path.insert (0, os.getcwd ())
 
 from applnlayer.CustomApplnProtocol import CustomApplnProtocol as ApplnProtoObj
-testDB = { 
-        "host": "10.0.0.2",
-        "destination": "10.0.0.5",
-        "next hop": "10.0.0.3"
-        }
 
+testDB = pd.read_csv("./RouteDB.csv")
 ##########################################################
 #receive a request and simply forward it to the next hop #
 # by consulting the supplied route                       #
@@ -30,6 +28,8 @@ class CustomRouter ():
 
   def __init__(self):
     self.router_obj = None
+    self.ip2host = {f"10.0.0.{i}": f"H{i}" for i in range(1,10)}
+    self.host2ip = { f"H{i}": f"10.0.0.{i}" for i in range(1,10)}
 
   ########################################
   # configure/initialize
@@ -89,6 +89,28 @@ class CustomRouter ():
       print ("Some exception occurred getting ROUTER socket {}".format (sys.exc_info()[0]))
       return
 
+    ###################
+    ## Table Look Up ##
+    ###################
+    try:
+      ## Get host ip & convert it to host name
+      print("Obtaining the Next Hop Host Name")
+      ifconfig_output=(subprocess.check_output('ifconfig')).decode()
+      regex_ip=re.search(r"[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}",ifconfig_output)
+      h_ip = str(regex_ip.group(0))
+      print(f"Host IP is {self.ip2host[h_ip]}")
+      ## @TO-DO@
+      nexthost = testDB.loc[testDB.host==ip2host[h_ip]].loc[testDB.destination=="10.0.0.5"].nexthop.values[0] # replace "10.0.0.5" with final destination
+      print(testDB.loc[testDB.host==ip2host[h_ip]].loc[testDB.destination=="10.0.0.5"].nexthop.values[0]) # replace "10.0.0.5" with final destination
+      nextip = host2ip[nexthost]
+      print(nextip)
+
+    except:
+      print ("Some exception occurred getting ROUTER host name...")
+      return
+        
+
+
     try:
       # as in a traditional socket, tell the system what port are we going to listen on
       # Moreover, tell it which protocol we are going to use, and which network
@@ -127,6 +149,7 @@ class CustomRouter ():
       # as in a traditional socket, tell the system what IP addr and port are we
       # going to connect to. Here, we are using TCP sockets.
       print ("Router connecting to next hop")
+      #### TO-DO
       connect_string = "tcp://" + args.nexthopaddr + ":" + str (args.nexthopport)
       print ("TCP client will be connecting to {}".format (connect_string))
       conn_sock.connect (connect_string)
