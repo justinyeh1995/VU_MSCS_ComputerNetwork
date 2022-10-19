@@ -110,6 +110,7 @@ def parseCmdLineArgs ():
   # add optional arguments
   parser.add_argument ("-i", "--intf", default="*", help="Interface to bind to (default: *)")
   parser.add_argument ("-p", "--port", type=int, default=5555, help="Port to bind to (default: 5555)")
+  parser.add_argument ("-t", "--demux_token", default="server", help="Our identity used as a demultiplexing token (default: server)")
   args = parser.parse_args ()
 
   return args

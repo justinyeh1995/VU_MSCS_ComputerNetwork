@@ -51,6 +51,17 @@ def driver (args):
     return
 
   try:
+    # set our identity
+    print ("client setting its identity: {}".format (args.demux_token))
+    socket.setsockopt (zmq.IDENTITY, bytes (args.demux_token, "utf-8"))
+  except zmq.ZMQError as err:
+    print ("ZeroMQ Error setting sockopt: {}".format (err))
+    return
+  except:
+    print ("Some exception occurred setting sockopt on REQ socket {}".format (sys.exc_info()[0]))
+    return
+
+  try:
     # as in a traditional socket, tell the system what IP addr and port are we
     # going to connect to. Here, we are using TCP sockets.
     connect_string = "tcp://" + args.addr + ":" + str (args.port)
@@ -96,7 +107,6 @@ def driver (args):
       print ("Some exception occurred receiving/sending {}".format (sys.exc_info()[0]))
       socket.close ()
       return
-
 ##################################
 # Command line parsing
 ##################################
@@ -109,6 +119,7 @@ def parseCmdLineArgs ():
   parser.add_argument ("-p", "--port", type=int, default=4444, help="Port that next hop router is listening on (default: 4444)")
   parser.add_argument ("-i", "--iters", type=int, default=1000, help="Number of iterations (default: 1000")
   parser.add_argument ("-m", "--message", default="HelloWorld", help="Message to send: default HelloWorld")
+  parser.add_argument ("-t", "--demux_token", default="client", help="Our identity used as a demultiplexing token (default: client)")
   args = parser.parse_args ()
 
   return args
