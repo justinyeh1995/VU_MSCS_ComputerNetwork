@@ -8,7 +8,7 @@ import zmq # actually not needed here but we are printing zmq version and hence 
 import subprocess # for calling ifconfig
 import re # for parsing first inet addr
 import csv # for parsing the routing table
-import pands as pd
+import pandas as pd
 # add to the python system path so that the following packages can be found
 # relative to this directory
 sys.path.insert (0, os.getcwd ())
@@ -30,6 +30,9 @@ class CustomRouter ():
     self.router_obj = None
     self.ip2host = {f"10.0.0.{i}": f"H{i}" for i in range(1,10)}
     self.host2ip = { f"H{i}": f"10.0.0.{i}" for i in range(1,10)}
+    self.final_dest = None
+    self.next_ip = None
+    self.next_port = None
 
   ########################################
   # configure/initialize
@@ -89,28 +92,6 @@ class CustomRouter ():
       print ("Some exception occurred getting ROUTER socket {}".format (sys.exc_info()[0]))
       return
 
-    ###################
-    ## Table Look Up ##
-    ###################
-    try:
-      ## Get host ip & convert it to host name
-      print("Obtaining the Next Hop Host Name")
-      ifconfig_output=(subprocess.check_output('ifconfig')).decode()
-      regex_ip=re.search(r"[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}",ifconfig_output)
-      h_ip = str(regex_ip.group(0))
-      print(f"Host IP is {self.ip2host[h_ip]}")
-      ## @TO-DO@
-      nexthost = testDB.loc[testDB.host==ip2host[h_ip]].loc[testDB.destination=="10.0.0.5"].nexthop.values[0] # replace "10.0.0.5" with final destination
-      print(testDB.loc[testDB.host==ip2host[h_ip]].loc[testDB.destination=="10.0.0.5"].nexthop.values[0]) # replace "10.0.0.5" with final destination
-      nextip = host2ip[nexthost]
-      print(nextip)
-
-    except:
-      print ("Some exception occurred getting ROUTER host name...")
-      return
-        
-
-
     try:
       # as in a traditional socket, tell the system what port are we going to listen on
       # Moreover, tell it which protocol we are going to use, and which network
@@ -127,40 +108,10 @@ class CustomRouter ():
       print ("Some exception occurred binding ROUTER socket {}".format (sys.exc_info()[0]))
       bind_sock.close ()
       return
-
-    #########################
-    ## Connect to next hop ##
-    #########################
-    try:
-      # The socket concept in ZMQ is far more advanced than the traditional socket in
-      # networking. Each socket we obtain from the context object must be of a certain
-      # type. For TCP, we will use the DEALER socket type (many other pairs are supported)
-      # and this is to be used on the client side.
-      print ("Router acquiring connection socket")
-      conn_sock = context.socket (zmq.DEALER)
-    except zmq.ZMQError as err:
-      print ("ZeroMQ Error obtaining context: {}".format (err))
-      return
-    except:
-      print ("Some exception occurred getting DEALER socket {}".format (sys.exc_info()[0]))
-      return
-
-    try:
-      # as in a traditional socket, tell the system what IP addr and port are we
-      # going to connect to. Here, we are using TCP sockets.
-      print ("Router connecting to next hop")
-      #### TO-DO
-      connect_string = "tcp://" + args.nexthopaddr + ":" + str (args.nexthopport)
-      print ("TCP client will be connecting to {}".format (connect_string))
-      conn_sock.connect (connect_string)
-    except zmq.ZMQError as err:
-      print ("ZeroMQ Error connecting DEALER socket: {}".format (err))
-      conn_sock.close ()
-      return
-    except:
-      print ("Some exception occurred connecting DEALER socket {}".format (sys.exc_info()[0]))
-      conn_sock.close ()
-      return
+    
+    ###############################################
+    ## Wait on the first REQ for routing purpose ##
+    ###############################################
 
     ########################
     ## Register to Poller ##
@@ -169,7 +120,7 @@ class CustomRouter ():
       # register sockets
       print ("Register sockets for incoming events")
       poller.register (bind_sock, zmq.POLLIN)
-      poller.register (conn_sock, zmq.POLLIN)
+      #poller.register (conn_sock, zmq.POLLIN)
     except zmq.ZMQError as err:
       print ("ZeroMQ Error registering with poller: {}".format (err))
       return
@@ -207,6 +158,27 @@ class CustomRouter ():
             # byte, and then the actual payload
             request = bind_sock.recv_multipart ()
             print("Router received request from prev hop via ROUTER: %s" % request)
+            print(request[-3])
+            final_dest = request[-3].decode("utf-8").split("/")[0]
+            ###################
+            ## Table Look Up ##
+            ###################
+            print("Consulting the Routing Table...")
+            try:
+              ## Get host ip & convert it to host name
+              print("Obtaining the Next Hop Host Name")
+              ifconfig_output=(subprocess.check_output('ifconfig')).decode()
+              regex_ip=re.search(r"[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}",ifconfig_output)
+              my_ip = str(regex_ip.group(0))
+              assert my_ip == args.myaddr # just to make sure it's same, i will clean this up later
+              ## @TO-DO@
+              nexthost = testDB.loc[testDB.host==ip2host[my_ip]].loc[testDB.destination==final_dest].nexthop.values[0] # replace "10.0.0.5" with final destination
+              nexthop = host2ip[nexthost]
+              print(f"Router HostName is {nexthop}")
+              print(f"Router Host IP is {self.ip2host[my_ip]}")
+            except:
+              print ("Some exception occurred getting ROUTER host name...")
+              return
           except zmq.ZMQError as err:
             print ("ZeroMQ Error receiving: {}".format (err))
             bind_sock.close ()
@@ -215,6 +187,67 @@ class CustomRouter ():
             print ("Some exception occurred receiving/sending {}".format (sys.exc_info()[0]))
             bind_sock.close ()
             return
+          #########################
+          ## Connect to next hop ##
+          #########################
+          try:
+            # The socket concept in ZMQ is far more advanced than the traditional socket in
+            # networking. Each socket we obtain from the context object must be of a certain
+            # type. For TCP, we will use the DEALER socket type (many other pairs are supported)
+            # and this is to be used on the client side.
+            print ("Router acquiring connection socket")
+            conn_sock = context.socket (zmq.DEALER)
+          except zmq.ZMQError as err:
+            print ("ZeroMQ Error obtaining context: {}".format (err))
+            return
+          except:
+            print ("Some exception occurred getting DEALER socket {}".format (sys.exc_info()[0]))
+            return
+
+          ##################
+          ## Set Identity ##
+          ##################
+          try:
+            # set our identity
+            print ("router setting its identity: {}".format (nexthop))
+            conn_sock.setsockopt (zmq.IDENTITY, bytes(nexthop, "utf-8")) # the long string should be "H1", "H2" or something
+          except zmq.ZMQError as err:
+            print ("ZeroMQ Error setting sockopt: {}".format (err))
+            return
+          except:
+            print ("Some exception occurred setting sockopt on REQ socket {}".format (sys.exc_info()[0]))
+            return
+
+          ######################################
+          ## Connection should be found later ##
+          ######################################
+          try:
+            # as in a traditional socket, tell the system what IP addr and port are we
+            # going to connect to. Here, we are using TCP sockets.
+            print ("Router connecting to next hop")
+            #### TO-DO
+            nexthopport = 4444
+            connect_string = "tcp://" + nextip + ":" + str (nexthopport)
+            print ("TCP client will be connecting to {}".format (connect_string))
+            conn_sock.connect (connect_string)
+          except zmq.ZMQError as err:
+            print ("ZeroMQ Error connecting DEALER socket: {}".format (err))
+            conn_sock.close ()
+            return
+          except:
+            print ("Some exception occurred connecting DEALER socket {}".format (sys.exc_info()[0]))
+            conn_sock.close ()
+            return
+
+          poller.register (conn_sock, zmq.POLLIN)
+          except zmq.ZMQError as err:
+            print ("ZeroMQ Error registering with poller: {}".format (err))
+            return
+          except:
+            print ("Some exception occurred getting poller {}".format (sys.exc_info()[0]))
+            return
+          except Exception as e:
+            raise e
 
           try:
             #  forward request to server
@@ -228,6 +261,17 @@ class CustomRouter ():
             print ("Some exception occurred forwarding {}".format (sys.exc_info()[0]))
             conn_sock.close ()
             return
+
+        
+        try:
+          # collect all the sockets that are enabled in this iteration
+          socks = dict (poller.poll ())
+        except zmq.ZMQError as err:
+          print ("ZeroMQ Error polling: {}".format (err))
+          return
+        except:
+          print ("Some exception occurred in polling {}".format (sys.exc_info()[0]))
+          return
 
         if conn_sock in socks:
           try:
@@ -270,8 +314,8 @@ def parseCmdLineArgs ():
   # add optional arguments
   parser.add_argument ("-a", "--myaddr", default="*", help="Interface to bind to (default: *)")
   parser.add_argument ("-p", "--myport", type=int, default=4444, help="Port to bind to (default: 4444)")
-  parser.add_argument ("-A", "--nexthopaddr", default="127.0.0.1", help="IP Address of next router or end server to connect to (default: localhost i.e., 127.0.0.1)")
-  parser.add_argument ("-P", "--nexthopport", type=int, default=4444, help="Port that appln or next router is listening on (default: 4444)")
+  #parser.add_argument ("-A", "--nexthopaddr", default="127.0.0.1", help="IP Address of next router or end server to connect to (default: localhost i.e., 127.0.0.1)")
+  #parser.add_argument ("-P", "--nexthopport", type=int, default=4444, help="Port that appln or next router is listening on (default: 4444)")
   args = parser.parse_args ()
 
   return args
