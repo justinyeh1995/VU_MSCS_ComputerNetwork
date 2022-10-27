@@ -100,10 +100,13 @@ class CustomNetworkProtocol ():
   ##################################
   #  send network packet
   ##################################
-  def send_packet (self, packet, size):
+  def send_packet (self, segment, size):
     try:
 
-      
+      ###### TO-DO ###########
+      ## handle packet here ##
+      ########################
+      seq_no, packet = segment
       # Here, we simply delegate to our ZMQ socket to send the info
       print ("Custom Network Protocol::send_packet")
       # @TODO@ - this may need mod depending on json or serialized packet

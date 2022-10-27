@@ -11,6 +11,9 @@
 # import the needed packages
 import os     # for OS functions
 import sys    # for syspath and system exception
+import random
+import time
+import zmq
 
 # add to the python system path so that packages can be found relative to
 # this directory
@@ -101,21 +104,21 @@ class CustomTransportProtocol ():
       ## Add ser. num  ##
       ###################
       print ("Custom Transport Protocol::send_appln_msg")
-      self.send_segment (payload, size)
+      #self.send_segment (payload, size)
       
       mtu = 16
       fullpacket = [payload[i:i + mtu] for i in range(0, len(payload), mtu)]
       #########
       ## ABP ##
       #########
-      l, r = 0 # left, right pointers for sliding window.
+      l = r = 0 # left, right pointers for sliding window.
       seq_no = 0
       while seq_no < len(fullpacket): # send segment one by one
         token = ''
         # attemp to recv seq_no & ACK
         while token != 'ACK':
          decision = random.randint(1,3) 
-         self.send_segment(seq_no, fullpacket[seq_no], decision) # keep resending until we establish handshakes
+         self.send_segment(seq_no, fullpacket[seq_no], decision, size) # keep resending until we establish handshakes
          seq_no, token = self.recv_ACK(seq_no) # token can be '' or 'ACK' and it might wait for certain amount of time 
         # handshake established
         print (f"Hankshake established for {seq_no}")
