@@ -38,6 +38,7 @@ class CustomTransportProtocol ():
     self.ip = None
     self.port = None
     self.nw_obj = None # handle to our underlying network layer object
+    self.delay = 5
     #########################
     ## Set a timer here ?? ##
     #########################
@@ -70,7 +71,6 @@ class CustomTransportProtocol ():
       # directly talk to the remote peer. In future assignments, this will be the
       # next hop router to whom we talk to.
       print ("Custom Transport Protocol::initialize - initialize network object")
-      # shouldn't we knida of consult the table here??
       self.nw_obj.initialize (config, self.role, self.ip, self.port)
       
     except Exception as e:
@@ -90,22 +90,97 @@ class CustomTransportProtocol ():
       # protocol. For Assignment #1, we send the entire message as is in a single
       # segment
 
-      print ("Custom Transport Protocol::send_appln_msg")
-      # add final addr here?
-      self.send_segment (payload, size)
+      ############
+      ## Sender ##
+      ############
 
+      ###################
+      ## MTU = 16bytes ##
+      ## Break 1MB to  ##
+      ## 64 chunks &   ##
+      ## Add ser. num  ##
+      ###################
+      print ("Custom Transport Protocol::send_appln_msg")
+      self.send_segment (payload, size)
+      
+      mtu = 16
+      fullpacket = [payload[i:i + mtu] for i in range(0, len(payload), mtu)]
+      #########
+      ## ABP ##
+      #########
+      l, r = 0 # left, right pointers for sliding window.
+      seq_no = 0
+      while seq_no < len(fullpacket): # send segment one by one
+        token = ''
+        # attemp to recv seq_no & ACK
+        while token != 'ACK':
+         decision = random.randint(1,3) 
+         self.send_segment(seq_no, fullpacket[seq_no], decision) # keep resending until we establish handshakes
+         seq_no, token = self.recv_ACK(seq_no) # token can be '' or 'ACK' and it might wait for certain amount of time 
+        # handshake established
+        print (f"Hankshake established for {seq_no}")
+        seq_no += 1
+
+    except Exception as e:
+      raise e
+  
+  ##############################
+  ## Used in Reciever(Server) ##
+  ##############################
+
+  def send_ACK(self,seq_no):
+    try:
+      # For this assignment, we ask our dummy network layer to
+      # send it to peer. We ignore the length in this assignment
+      print ("Custom Transport Protocol::send_transport_segment_ACK")
+      self.nw_obj.send_packet ((seq_no, 'ACK'),len)
+      
+    except Exception as e:
+      raise e
+
+  ############################
+  ## Used in Sender(Client) ##
+  ############################
+
+  def recv_ACK(self, seq_no):
+    try:
+      # receive an ACK to build handshake
+      print ("Custom Transport Protocol::recv_transport_ACK")
+      timeout = 10 / 1000
+      start = end = time.time()
+      token = ''
+      while (start - end) <= timeout:
+        try:
+          seq_no, token = self.nw_obj.recv_packet (len)
+          print ("Recieved ACK from the server")
+        except zmq.Again as e:
+          print ("No message received yet")
+
+        end = time.time()
+
+      return seq_no, token
+    
     except Exception as e:
       raise e
 
   ##################################
-  #  send transport layer segment
+  #  send transport layer segment  #
   ##################################
-  def send_segment (self, segment, len=0):
+  def send_segment (self, seq_no, segment, decision, len=0): # I modified the parameters 
     try:
       # For this assignment, we ask our dummy network layer to
       # send it to peer. We ignore the length in this assignment
-      print ("Custom Transport Protocol::send_transport_segment")
-      self.nw_obj.send_packet (segment, len)
+      print (f"Custom Transport Protocol::send_transport_segment_with_the_{decision}_scenario")
+      if decision == 1: # normal behavior
+        print("sent to the next hop")
+        self.nw_obj.send_packet ((seq_no, segment),len)
+      elif decision == 2: # delay
+        print(f"dealy for {self.delay} ms")
+        time.sleep(self.delay/1000)
+        print("sent to the next hop")
+        self.nw_obj.send_packet ((seq_no, segment),len)
+      else:
+        print("segment loss") # loss segment
       
     except Exception as e:
       raise e
@@ -123,7 +198,35 @@ class CustomTransportProtocol ():
       #
       # For this assignment, we do not care about all these things.
       print ("Custom Transport Protocol::recv_transport_segment")
+      ##############
+      ## Reciever ##
+      ##############
+
+      ################################
+      ## Make sure it is a full msg ##
+      ################################
+      '''
       appln_msg = self.recv_segment ()
+      '''
+
+      appln_msg = []
+      buffer_SW = [] # buffer for current sliding window
+      while True:
+          (seq_no, segment) = self.recv_segment () # reciever doesn't know whether there is a loss.
+          print(f'No. {seq_no} segment recieved')
+          self.send_ACK(seq_no)
+          print(f'Sent No. {seq_no} & ACK')
+          
+          ## for ABP there will be duplicate recieving issues 
+          ## handle it here before append it to appln_msg
+          ## TO-DO
+
+          appln_msg.append(segment)
+          # TO-DO #
+          # work with buffers for GBN / SR algo here
+
+      appln_msg = b''.join(appln_msg) # need to print out & check here
+
       return appln_msg
     
     except Exception as e:
