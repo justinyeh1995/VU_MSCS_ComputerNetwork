@@ -71,7 +71,7 @@ class CustomApplnProtocol ():
   ###############################
   # configure/initialize
   ###############################
-  def initialize (self, config, ip, port):
+  def initialize (self, config, ip, port, router=True):
     ''' Initialize the object '''
 
     try:
@@ -95,7 +95,7 @@ class CustomApplnProtocol ():
       # initialize it
       print ("Custom Appln Protocol::initialize - initialize transport object")
       ### TO-DO: add next ip here
-      self.xport_obj.initialize (config, ip, port)
+      self.xport_obj.initialize (config, ip, port,router)
       
     except Exception as e:
       raise e  # just propagate it
@@ -171,8 +171,8 @@ class CustomApplnProtocol ():
       while len(buf) < 1024:
           buf += b"-"
 
-      #self.xport_obj.send_appln_msg (buf, len (buf), "message")
-      self.xport_obj.send_appln_msg (buf, len (buf), "response")
+      self.xport_obj.send_appln_msg (buf, len (buf), "message")
+      #self.xport_obj.send_appln_msg (buf, len (buf), "response")
     except Exception as e:
       raise e
 
@@ -205,7 +205,7 @@ class CustomApplnProtocol ():
         raise BadMessageType ()
 
       self.xport_obj.send_appln_msg(buf, len (buf), "response")
-      #self.xport_obj.send_appln_msg(buf, len (buf), "message")
+
     except Exception as e:
       raise e
 
@@ -223,8 +223,8 @@ class CustomApplnProtocol ():
       # Note, that in this assignment, we are not worrying about sending
       # transport segments etc and so what we receive from ZMQ is the complete
       # message.
-      #request = self.xport_obj.recv_appln_msg (role="message")
-      request = self.xport_obj.recv_appln_msg (role="response")
+      request = self.xport_obj.recv_appln_msg (role="message")
+      #request = self.xport_obj.recv_appln_msg (role="response")
       if self.ser_type == SerializationType.FBUFS:
         request = szfb.deserialize(request)
       else:

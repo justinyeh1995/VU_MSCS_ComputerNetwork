@@ -29,6 +29,9 @@ host2ip = { f"H{i}": f"10.0.0.{i}" for i in range(1,30)}
 # Driver program
 ##################################
 def driver (args):
+  #######################
+  ## Intinalize Router ##
+  #######################
   try:
     # every ZMQ session requires a context
     print ("Obtain the ZMQ context")
@@ -64,7 +67,9 @@ def driver (args):
   except:
     print ("Some exception occurred getting ROUTER socket {}".format (sys.exc_info()[0]))
     return
-  
+  #################
+  ## Bind Socket ##
+  #################
   try:
     # as in a traditional socket, tell the system what port are we going to listen on
     # Moreover, tell it which protocol we are going to use, and which network
@@ -73,6 +78,7 @@ def driver (args):
     ifconfig_output=(subprocess.check_output('ifconfig')).decode()
     regex_ip=re.search(r"[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}",ifconfig_output)
     my_ip = str(regex_ip.group(0))
+    print(f"Router Host HostName is {ip2host[my_ip]}")
     bind_string = "tcp://" + my_ip + ":" + str (args.myport)
     print ("TCP router will be binding on {}".format (bind_string))
     bind_sock.bind (bind_string)
@@ -84,19 +90,22 @@ def driver (args):
     print ("Some exception occurred binding ROUTER socket {}".format (sys.exc_info()[0]))
     bind_sock.close ()
     return
-
+  ##########################
+  ## Register bind socket ##
+  ##########################
   try:
     # register sockets
     print ("Register sockets for incoming events")
     poller.register (bind_sock, zmq.POLLIN)
-    #poller.register (conn_sock, zmq.POLLIN)
   except zmq.ZMQError as err:
     print ("ZeroMQ Error registering with poller: {}".format (err))
     return
   except:
     print ("Some exception occurred getting poller {}".format (sys.exc_info()[0]))
     return
-  
+  ###############################
+  ## Serving incoming requests ##
+  ###############################
   # since we are a server, we service incoming clients forever
   print ("Router now starting its forwarding loop")
   while True:
@@ -131,11 +140,10 @@ def driver (args):
         try:
           ## Get host ip & convert it to host name
           print("Obtaining the Next Hop Host Name")
-          ## @TO-DO@
           nexthost = testDB.loc[testDB.host==ip2host[my_ip]].loc[testDB.destination==final_dest].nexthop.values[0] # replace "10.0.0.5" with final destination
           nexthop = host2ip[nexthost]
-          print(f"Next Router IP is {nexthop}")
-          print(f"Router Host HostName is {ip2host[my_ip]}")
+          print(f"Next Router HostName is {nexthost}")
+          print(f"Next Router Host IP is {nexthop}")
         except:
           print ("Some exception occurred getting ROUTER host name...")
           return
@@ -151,10 +159,6 @@ def driver (args):
       ## what are we handling here
       #######################
       try:
-        # The socket concept in ZMQ is far more advanced than the traditional socket in
-        # networking. Each socket we obtain from the context object must be of a certain
-        # type. For TCP, we will use the DEALER socket type (many other pairs are supported)
-        # and this is to be used on the client side.
         print ("Router acquiring connection socket")
         conn_sock = context.socket (zmq.DEALER)
       except zmq.ZMQError as err:
@@ -193,7 +197,9 @@ def driver (args):
         print ("Some exception occurred connecting DEALER socket {}".format (sys.exc_info()[0]))
         conn_sock.close ()
         return
-
+      #####################################
+      ## Register this connection socket ##
+      #####################################
       try:
         # register sockets
         print ("Register sockets for incoming events")
@@ -204,7 +210,6 @@ def driver (args):
       except:
         print ("Some exception occurred getting poller {}".format (sys.exc_info()[0]))
         return
-      
 
       try:
         #  forward request to server
@@ -219,6 +224,9 @@ def driver (args):
         conn_sock.close ()
         return
 
+    ###########################
+    ## Handle DEALER socket  ##
+    ###########################
     try:
       # collect all the sockets that are enabled in this iteration
       print ("Poller polling")

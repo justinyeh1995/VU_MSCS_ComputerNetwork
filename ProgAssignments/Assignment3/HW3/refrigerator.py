@@ -69,8 +69,8 @@ class Refrigerator ():
       self.health_obj = ApplnProtoObj (False)  # the false flag indicates this is a client side
 
       # initialize the custom application objects
-      self.groc_obj.initialize (config, args.groc_ip, args.groc_port)
-      self.health_obj.initialize (config, args.status_ip, args.status_port)
+      self.groc_obj.initialize (config, args.groc_ip, args.groc_port, router=True)
+      self.health_obj.initialize (config, args.status_ip, args.status_port, router=True)
 
     except Exception as e:
       raise e

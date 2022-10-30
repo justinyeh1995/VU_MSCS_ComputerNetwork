@@ -49,7 +49,7 @@ class CustomTransportProtocol ():
   ###############################
   # configure/initialize
   ###############################
-  def initialize (self, config, ip, port):
+  def initialize (self, config, ip, port, router=True):
     ''' Initialize the object '''
 
     try:
@@ -74,7 +74,7 @@ class CustomTransportProtocol ():
       # directly talk to the remote peer. In future assignments, this will be the
       # next hop router to whom we talk to.
       print ("Custom Transport Protocol::initialize - initialize network object")
-      self.nw_obj.initialize (config, self.role, self.ip, self.port)
+      self.nw_obj.initialize (config, self.role, self.ip, self.port, router)
       
     except Exception as e:
       raise e  # just propagate it
