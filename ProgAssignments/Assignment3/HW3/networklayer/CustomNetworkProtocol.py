@@ -18,12 +18,18 @@ sys.path.insert (0, "../")
 
 # import the zeromq capabilities
 import zmq
+import re
+import subprocess
+import pandas as pd
 
 ############################################
 #  Bunch of Network Layer Exceptions
 #
 # @TODO@ Add whatever make sense here.
 ############################################
+testDB = pd.read_csv("./RouteDB.csv")
+ip2host = {f"10.0.0.{i}": f"H{i}" for i in range(1,30)}
+host2ip = { f"H{i}": f"10.0.0.{i}" for i in range(1,30)}
 
 ############################################
 #       Custom Network Protocol class
@@ -81,42 +87,127 @@ class CustomNetworkProtocol ():
       else:
         # we are the client side
         print ("Custom Network Protocol Object: Initialize - get REQ socket")
-        self.socket = self.ctx.socket (zmq.REQ)
-
+        ############
+        ## Assign ##
+        ############
         # since we are client, we connect
+        try:
+          self.socket = self.ctx.socket (zmq.REQ)
+        except zmq.ZMQError as err:
+          print ("ZeroMQ Error obtaining context: {}".format (err))
+          return
+        except:
+          print ("Some exception occurred getting REQ socket {}".format (sys.exc_info()[0]))
+          return
         
-        ##########################
-        ## Need to Look Up here ##
-        ##########################
-
+        '''
         connect_str = "tcp://" + self.ip + ":" + str (self.port)
         print ("Custom Network Protocol Object: Initialize - connect socket to {}".format (connect_str))
         self.socket.connect (connect_str)
-        
-      
+        '''
+        ##################
+        ## Set Identity ##
+        ##################
+        try:
+          # set our identity
+          final_addr = self.ip + ":" + str(self.port)
+          print ("client setting its identity: {}".format (final_addr))
+          self.socket.setsockopt (zmq.IDENTITY, bytes (final_addr, "utf-8"))
+        except zmq.ZMQError as err:
+          print ("ZeroMQ Error setting sockopt: {}".format (err))
+          return
+        except:
+          print ("Some exception occurred setting sockopt on REQ self.socket {}".format (sys.exc_info()[0]))
+          return
+
+        ############################
+        ## Look Up Next Addr here ##
+        ############################
+        try:
+          ## Get host ip & convert it to host name
+          print("Obtaining the Next Hop Host Name")
+          ifconfig_output=(subprocess.check_output('ifconfig')).decode()
+          regex_ip=re.search(r"[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}",ifconfig_output)
+          my_ip = str(regex_ip.group(0))
+          ## @TO-DO@
+          nexthost = testDB.loc[testDB.host==ip2host[my_ip]].loc[testDB.destination==self.ip].nexthop.values[0]
+          nexthop = host2ip[nexthost]
+          print(f"Router HostName is {nexthop}")
+          print(f"Router Host IP is {ip2host[my_ip]}")
+        except:
+          print ("Some exception occurred getting ROUTER host name...")
+          return
+        #############
+        ## Connect ##
+        #############
+        try:
+          # as in a traditional self.socket, tell the system what IP addr and port are we
+          # going to connect to. Here, we are using TCP self.sockets.
+          connect_string = "tcp://" + nexthop + ":" + str (4444)
+          print ("Custom Network Protocol Object: Initialize - connect self.socket to {}".format (connect_string))
+          self.socket.connect (connect_string)
+        except zmq.ZMQError as err:
+          print ("ZeroMQ Error connecting REQ self.socket: {}".format (err))
+          self.socket.close ()
+          return
+        except:
+          print ("Some exception occurred connecting REQ self.socket {}".format (sys.exc_info()[0]))
+          self.socket.close ()
+          return
+            
     except Exception as e:
       raise e  # just propagate it
     
   ##################################
   #  send network packet
   ##################################
-  def send_packet (self, segment, size):
+  def send_packet (self, segment, size, role):
     try:
-
-      ###### TO-DO ###########
+      ###### to-do ###########
       ## handle packet here ##
       ########################
       seq_no, packet = segment
-      # Here, we simply delegate to our ZMQ socket to send the info
-      print ("Custom Network Protocol::send_packet")
-      # @TODO@ - this may need mod depending on json or serialized packet
+      byte_seq_no = (str(seq_no)+'+++').encode()
+      # here, we simply delegate to our zmq socket to send the info
+      # @todo@ - this may need mod depending on json or serialized packet
       #######################################
-      ## Constrain the Size of packet here ##
+      ## constrain the size of packet here ##
       #######################################
-      if self.config["Application"]["Serialization"] == "json":
-        self.socket.send (bytes(packet, "utf-8"))
+      if role == "response":
+        print ("custom network protocol::send_packet without chunking")
+        #dummy = self.socket.recv () # wtf????
+        if self.config["Application"]["Serialization"] == "json":
+          self.socket.send (bytes(packet, "utf-8"))
+        else:
+          self.socket.send (packet)
       else:
-        self.socket.send (packet)
+        print ("custom network protocol::send_packet with chunks")
+        if self.config["Application"]["Serialization"] == "json":
+          self.socket.send (byte_seq_no + bytes(packet, "utf-8"))
+        else:
+          self.socket.send (byte_seq_no + packet)
+
+    except Exception as e:
+      raise e
+
+  ##################################
+  #  send network packet
+  ##################################
+  def send_packet_ACK (self, segment, size):
+    try:
+
+      ###### to-do ###########
+      ## handle packet here ##
+      ########################
+      seq_no, packet = segment
+      byte_seq_no = (str(seq_no)+'+++').encode()
+      # here, we simply delegate to our zmq socket to send the info
+      print ("custom network protocol::send_packet_ACK")
+      # @todo@ - this may need mod depending on json or serialized packet
+      #######################################
+      ## constrain the size of packet here ##
+      #######################################
+      self.socket.send (byte_seq_no + packet)
 
     except Exception as e:
       raise e
@@ -124,12 +215,23 @@ class CustomNetworkProtocol ():
   ######################################
   #  receive network packet
   ######################################
-  def recv_packet (self, len=0):
+  def recv_packet (self, role, len=0):
     try:
       # @TODO@ Note that this method always receives bytes. So if you want to
       # convert to json, some mods will be needed here. Use the config.ini file.
-      packet = self.socket.recv ()
-      return packet
+      
+      print ("Custom Network Protocol::recv_packet")
+      if role == "response":
+        print ("Recieving responses or full messages..")
+        #self.socket.send (b'dummy') #wtf
+        packet = self.socket.recv ()
+        return packet
+      else:
+        print ("Recieving Chunked Messages..")
+        packet = self.socket.recv ()
+        b_seq_no, payload = packet.split(b"+++")
+        return int(b_seq_no.decode()), payload
     except Exception as e:
-      raise e
+        print("Error at network layer::recv_packet")
+        raise e
 

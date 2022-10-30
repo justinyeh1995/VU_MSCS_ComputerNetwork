@@ -113,7 +113,7 @@ class HealthStatus ():
             resp = self.gen_response_msg ()
             resp.code = "BAD_REQUEST"
             resp.contents = "Bad Request!"
-
+        print ("Sending Responses")
         self.health_obj.send_response (resp)
         
     except Exception as e:
@@ -129,7 +129,7 @@ def parseCmdLineArgs ():
   # add optional arguments
   parser.add_argument ("-c", "--config", default="config.ini", help="configuration file (default: config.ini")
   parser.add_argument ("-a", "--addr", default="*", help="Interface we are accepting connections on (default: all)")
-  parser.add_argument ("-p", "--port", type=int, default=7777, help="Port the health status server is listening on (default: 7777)")
+  parser.add_argument ("-p", "--port", type=int, default=5555, help="Port the health status server is listening on (default: 7777)")
   
   args = parser.parse_args ()
 

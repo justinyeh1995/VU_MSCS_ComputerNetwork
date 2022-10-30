@@ -117,6 +117,7 @@ class GroceryOrder ():
             resp.code = "BAD_REQUEST"
             resp.contents = "Bad Request!"
 
+        print ("Sending Responses")
         self.grocery_obj.send_response (resp)
         
     except Exception as e:

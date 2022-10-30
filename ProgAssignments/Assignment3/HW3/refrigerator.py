@@ -161,13 +161,14 @@ class Refrigerator ():
 
       # To ensure that bad requests are handled correctly, initially let us first
       # try sending wrong message to wrong server.
-
+      '''
       # Test 1:
       # create a grocery order
       msg = self.gen_grocery_order_msg ()
       print ("Sending grocery msg to health server {}".format (msg))
       # send it to health server and see if we get a bad request reply
       self.health_obj.send_grocery_order (msg)
+      print ("Done sending from the client side")
       # now receive a response
       reply = self.health_obj.recv_response () 
       print ("Received reply {}".format (reply))
@@ -181,7 +182,7 @@ class Refrigerator ():
       # now receive a response
       reply = self.groc_obj.recv_response () 
       print ("Received reply {}".format (reply))
-      
+      '''
       # Test 3: 
       # Here in each iteration and depending on the ratio, we decide whether to
       # send Grocery Message or Health Status Message. These are sent correctly. 
@@ -233,7 +234,7 @@ def parseCmdLineArgs ():
   parser.add_argument ("-g", "--groc_ip", default="127.0.0.1", help="IP Address of Grocery server to connect to (default: localhost i.e., 127.0.0.1)")
   parser.add_argument ("-p", "--groc_port", type=int, default=5555, help="Port that grocery server is listening on (default: 5555)")
   parser.add_argument ("-s", "--status_ip", default="127.0.0.1", help="IP Address of Health Status server to connect to (default: localhost i.e., 127.0.0.1)")
-  parser.add_argument ("-q", "--status_port", type=int, default=7777, help="Port that Healt Status server is listening on (default: 7777)")
+  parser.add_argument ("-q", "--status_port", type=int, default=5555, help="Port that Healt Status server is listening on (default: 7777)")
   parser.add_argument ("-r", "--req_ratio", default="1:1", help="Ratio of grocery orders sent to health status (default: 1:1 implying equal number)")
   
   args = parser.parse_args ()

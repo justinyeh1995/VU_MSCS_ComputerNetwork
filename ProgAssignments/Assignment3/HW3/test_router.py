@@ -23,8 +23,8 @@ import subprocess
 import pandas as pd
 
 testDB = pd.read_csv("./RouteDB.csv")
-ip2host = {f"10.0.0.{i}": f"H{i}" for i in range(1,10)}
-host2ip = { f"H{i}": f"10.0.0.{i}" for i in range(1,10)}
+ip2host = {f"10.0.0.{i}": f"H{i}" for i in range(1,30)}
+host2ip = { f"H{i}": f"10.0.0.{i}" for i in range(1,30)}
 ##################################
 # Driver program
 ##################################
@@ -70,7 +70,10 @@ def driver (args):
     # Moreover, tell it which protocol we are going to use, and which network
     # interface we are going to listen for incoming requests. This is TCP.
     print ("Bind the ROUTER socket")
-    bind_string = "tcp://" + args.myaddr + ":" + str (args.myport)
+    ifconfig_output=(subprocess.check_output('ifconfig')).decode()
+    regex_ip=re.search(r"[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}",ifconfig_output)
+    my_ip = str(regex_ip.group(0))
+    bind_string = "tcp://" + my_ip + ":" + str (args.myport)
     print ("TCP router will be binding on {}".format (bind_string))
     bind_sock.bind (bind_string)
   except zmq.ZMQError as err:
@@ -80,20 +83,6 @@ def driver (args):
   except:
     print ("Some exception occurred binding ROUTER socket {}".format (sys.exc_info()[0]))
     bind_sock.close ()
-    return
-
-  try:
-    # The socket concept in ZMQ is far more advanced than the traditional socket in
-    # networking. Each socket we obtain from the context object must be of a certain
-    # type. For TCP, we will use the DEALER socket type (many other pairs are supported)
-    # and this is to be used on the client side.
-    print ("Router acquiring connection socket")
-    conn_sock = context.socket (zmq.DEALER)
-  except zmq.ZMQError as err:
-    print ("ZeroMQ Error obtaining context: {}".format (err))
-    return
-  except:
-    print ("Some exception occurred getting DEALER socket {}".format (sys.exc_info()[0]))
     return
 
   try:
@@ -142,15 +131,11 @@ def driver (args):
         try:
           ## Get host ip & convert it to host name
           print("Obtaining the Next Hop Host Name")
-          ifconfig_output=(subprocess.check_output('ifconfig')).decode()
-          regex_ip=re.search(r"[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}",ifconfig_output)
-          my_ip = str(regex_ip.group(0))
-          assert my_ip == args.myaddr # just to make sure it's same, i will clean this up later
           ## @TO-DO@
           nexthost = testDB.loc[testDB.host==ip2host[my_ip]].loc[testDB.destination==final_dest].nexthop.values[0] # replace "10.0.0.5" with final destination
           nexthop = host2ip[nexthost]
-          print(f"Router HostName is {nexthop}")
-          print(f"Router Host IP is {ip2host[my_ip]}")
+          print(f"Next Router IP is {nexthop}")
+          print(f"Router Host HostName is {ip2host[my_ip]}")
         except:
           print ("Some exception occurred getting ROUTER host name...")
           return
@@ -161,6 +146,22 @@ def driver (args):
       except:
         print ("Some exception occurred receiving/sending {}".format (sys.exc_info()[0]))
         bind_sock.close ()
+        return
+      #######################
+      ## what are we handling here
+      #######################
+      try:
+        # The socket concept in ZMQ is far more advanced than the traditional socket in
+        # networking. Each socket we obtain from the context object must be of a certain
+        # type. For TCP, we will use the DEALER socket type (many other pairs are supported)
+        # and this is to be used on the client side.
+        print ("Router acquiring connection socket")
+        conn_sock = context.socket (zmq.DEALER)
+      except zmq.ZMQError as err:
+        print ("ZeroMQ Error obtaining context: {}".format (err))
+        return
+      except:
+        print ("Some exception occurred getting DEALER socket {}".format (sys.exc_info()[0]))
         return
 
       try:
@@ -268,9 +269,6 @@ def parseCmdLineArgs ():
   # add optional arguments
   parser.add_argument ("-a", "--myaddr", default="*", help="Interface to bind to (default: *)")
   parser.add_argument ("-p", "--myport", type=int, default=4444, help="Port to bind to (default: 4444)")
-  #parser.add_argument ("-A", "--nexthopaddr", default="127.0.0.1", help="IP Address of next router or end server to connect to (default: localhost i.e., 127.0.0.1)")
-  #parser.add_argument ("-P", "--nexthopport", type=int, default=4444, help="Port that appln or next router is listening on (default: 4444)")
-  parser.add_argument ("-t", "--demux_token", default="router", help="Our identity used as a demultiplexing token (default: router)")
   args = parser.parse_args ()
 
   return args

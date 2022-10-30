@@ -232,7 +232,7 @@ def serialize_to_frames (cm):
   
 # deserialize the incoming serialized structure into native data type
 def deserialize (buf):
-    print(type(buf))
+    print("Deserializing")
     test_packet = health.Message.GetRootAs(buf, 0)
     if test_packet.Type() == b"ORDER":
         cm = GroceryOrderMessage()
