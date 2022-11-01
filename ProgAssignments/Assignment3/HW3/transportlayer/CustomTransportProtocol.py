@@ -59,7 +59,7 @@ class CustomTransportProtocol ():
       # initialize our variables
       self.ip = ip
       self.port = port
-
+      self.protocol = config["TCP"]["Protocol"]
       # in a subsequent assignment, we will use the max segment size for our
       # transport protocol. This will be passed in the config.ini file.
       # Right now we do not care.
@@ -82,7 +82,7 @@ class CustomTransportProtocol ():
   ##################################
   #  send application message
   ##################################
-  def send_appln_msg (self, payload, size, role):
+  def send_appln_msg (self, payload, size, split):
     try:
       # @TODO@ Implement this
       # What we should get here is a serialized message from the application
@@ -96,37 +96,62 @@ class CustomTransportProtocol ():
       ############
       ## Sender ##
       ############
-      if role == "response":
+      if not split:
         print ("Custom Transport Protocol::send_appln_msg without chunking it")
-        self.send_segment (0, payload, 1, role, size)
+        self.send_segment (0, payload, 1, split, size)
       ###################
       ## MTU = 16bytes ##
       ## Break 1MB to  ##
       ## 64 chunks &   ##
       ## Add ser. num  ##
       ###################
-      elif role == "message":
+      else:
         print ("Custom Transport Protocol::send_appln_msg with chunks")
         mtu = 16
         fullpacket = [payload[i:i + mtu] for i in range(0, len(payload), mtu)]
+
         #########
         ## ABP ##
         #########
-        l = r = 0 # left, right pointers for sliding window.
-        seq_no = 0
-        while seq_no < len(fullpacket): # send segment one by one
-          token = ''
-          # attemp to recv seq_no & ACK
-          while token != b'ACK':
-           decision = random.randint(1,1) 
-           print(seq_no)
-           print(fullpacket[seq_no])
-           self.send_segment (seq_no, fullpacket[seq_no], decision, role, size) # keep resending until we establish handshakes
-           #self.send_segment(seq_no, fullpacket[seq_no], 3, size) # keep resending until we establish handshakes
-           seq_no, token = self.recv_ACK(seq_no) # token can be '' or 'ACK' and it might wait for certain amount of time 
-          # handshake established
-          print (f"Hankshake established for {seq_no}")
-          seq_no += 1
+
+        if self.protocol == "ABP":
+          print("ABP")
+          seq_no = 0
+          while seq_no < len(fullpacket): # send segment one by one
+            token = ''
+            # attemp to recv seq_no & ACK
+            while token != b'ACK':
+             print(f"Sending Segment {seq_no}")
+             print(fullpacket[seq_no])
+             ###############################
+             ## The logic is a bit odd rn ##
+             ###############################
+             self.send_segment (seq_no, fullpacket[seq_no], random.randint(1,1), split, size) # keep resending until we establish handshakes
+
+             #################
+             ## Add timeout ##
+             #################
+             seq_no_recv, token = self.recv_ACK(seq_no, timeout=10) # token can be '' or 'ACK' and it might wait for certain amount of time 
+            
+            if token == b"ACK": # handshake established
+              print (f"Hankshake established for {seq_no}")
+              seq_no += 1
+
+        #########
+        ## GBN ##
+        #########
+
+        elif self.protocol == "GBN":
+            print("GO-BACK-N")
+
+        ########
+        ## SR ##
+        ########
+
+        elif self.protocol == "SR":
+            print("SR")
+          l = r = 0 # left, right pointers for sliding window.
+          self.send_segment (0, b'dummy', 1, "response") # not sure why we should do this but I kept failing without this further step
       print("All segments sent!")
         
     except Exception as e:
@@ -135,21 +160,21 @@ class CustomTransportProtocol ():
   ##################################
   #  send transport layer segment  #
   ##################################
-  def send_segment (self, seq_no, segment, decision, role, size=0): # I modified the parameters 
+  def send_segment (self, seq_no, segment, decision, split, size=0): # I modified the parameters 
     try:
       # For this assignment, we ask our dummy network layer to
       # send it to peer. We ignore the length in this assignment
       print (f"Custom Transport Protocol::send_transport_segment_with_the_{decision}_scenario")
       if decision == 1: # normal behavior
-        print("sent to the next hop")
-        self.nw_obj.send_packet ((seq_no, segment), size, role)
+        print("Packet sent to the next hop :>>")
+        self.nw_obj.send_packet ((seq_no, segment), size, split)
       elif decision == 2: # delay
-        print(f"dealy for {self.delay} ms")
+        print(f"Delay sending for {self.delay} ms")
         time.sleep(self.delay/1000)
-        print("sent to the next hop")
-        self.nw_obj.send_packet ((seq_no, segment), size, role)
+        print("After delaying for {self.delay} ms, send the packet to the next hop")
+        self.nw_obj.send_packet ((seq_no, segment), size, split)
       else:
-        print("segment loss") # loss segment
+        print("Packet loss!!") # loss segment
       
     except Exception as e:
       raise e
@@ -172,22 +197,22 @@ class CustomTransportProtocol ():
   ## Used in Sender(Client) ##
   ############################
 
-  def recv_ACK(self, seq_no):
+  def recv_ACK(self, seq_no, timeout=10):
     try:
       # receive an ACK to build handshake
       print ("Custom Transport Protocol::recv_transport_ACK")
-      timeout = 1000
-      start = end = time.time()
-      token = ''
-      while (start - end) <= timeout and token != b"ACK":
-        #try:
-        seq_no, token = self.nw_obj.recv_packet (len)
-        #  print ("Recieved ACK from the server")
-        #except zmq.Again as e:
-        #  print ("No message received yet")
+      seq_no, token = self.nw_obj.recv_packet (split=True)
+      #start = end = time.time()
+      #token = ''
+      #while (end - start) <= timeout and token != b"ACK":
+      #  #try:
+      #  seq_no, token = self.nw_obj.recv_packet (len)
+      #  #  print ("Recieved ACK from the server")
+      #  #except zmq.Again as e:
+      #  #  print ("No message received yet")
 
-        end = time.time()
-
+      #  end = time.time()
+      #  print(end-start)
       return seq_no, token
     
     except Exception as e:
@@ -196,7 +221,7 @@ class CustomTransportProtocol ():
   ######################################
   #  receive application-level message
   ######################################
-  def recv_appln_msg (self, size=0, role="message"):
+  def recv_appln_msg (self, size=0, split=False):
     try:
       # The transport protocol (at least TCP) is byte stream, which means it does not
       # know the boundaries of the message. So it must be told how much to receive
@@ -213,13 +238,15 @@ class CustomTransportProtocol ():
       ################################
       ## Make sure it is a full msg ##
       ################################
-      if role == "response":
-        appln_msg = self.recv_segment (role)
+      if not split:
+        appln_msg = self.recv_segment (split)
       else:
         appln_msg = []
         buffer_SW = [] # buffer for current sliding window
-        while True:
-            seq_no, segment = self.recv_segment (role) # reciever doesn't know whether there is a loss.
+        if self.protocol == "ABP":
+          print("ABP")
+          while True:
+            seq_no, segment = self.recv_segment (split) # reciever doesn't know whether there is a loss.
             print(f'No. {seq_no} segment recieved')
             self.send_ACK(seq_no)
             print(f'Sent No. {seq_no} & ACK')
@@ -233,7 +260,12 @@ class CustomTransportProtocol ():
             # work with buffers for GBN / SR algo here
             if len(appln_msg) >= 64:
                 break
+        elif self.protocol == "GBN":
+            print("GO-BACK-N")
+        elif self.protocol == "SR":
+            print("SR")
         appln_msg = b''.join(appln_msg) # need to print out & check here
+        dummy = self.recv_segment ("response") # not sure
       print ("===================================")
       print ("Recieved full messages")
       print (appln_msg)
@@ -245,17 +277,17 @@ class CustomTransportProtocol ():
   ######################################
   #  receive transport segment
   ######################################
-  def recv_segment (self, role, size=0):
+  def recv_segment (self, split, size=0):
     try:
       # receive a segment. In future assignments, we may be asking for
       # a pipeline of segments.
       #
       # For this assignment, we do not care about all these things.
-      if role == "response":
-        segment = self.nw_obj.recv_packet (role, size)
+      if not split:
+        segment = self.nw_obj.recv_packet (split, size)
         return segment
 
-      seq_no ,segment = self.nw_obj.recv_packet (role, size)
+      seq_no ,segment = self.nw_obj.recv_packet (split, size)
       return seq_no, segment
     
     except Exception as e:

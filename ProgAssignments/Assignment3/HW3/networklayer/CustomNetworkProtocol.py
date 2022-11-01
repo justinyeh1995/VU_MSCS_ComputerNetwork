@@ -180,7 +180,7 @@ class CustomNetworkProtocol ():
   ##################################
   #  send network packet
   ##################################
-  def send_packet (self, segment, size, role):
+  def send_packet (self, segment, size, split):
     try:
       ###### to-do ###########
       ## handle packet here ##
@@ -188,9 +188,9 @@ class CustomNetworkProtocol ():
       seq_no, packet = segment
       byte_seq_no = (str(seq_no)+'+++').encode()
       # here, we simply delegate to our zmq socket to send the info
-      if role == "response":
+      if not split:
         print ("custom network protocol::send_packet without chunking")
-        #dummy = self.socket.recv () # wtf????
+        #dummy = self.socket.recv_multipart () # wtf????
         if self.config["Application"]["Serialization"] == "json":
           self.socket.send_multipart ([b'',bytes(packet, "utf-8")])
         else:
@@ -222,7 +222,7 @@ class CustomNetworkProtocol ():
       #######################################
       ## constrain the size of packet here ##
       #######################################
-      self.socket.send_multipart (byte_seq_no + packet)
+      self.socket.send_multipart ([b'',byte_seq_no + packet])
 
     except Exception as e:
       raise e
@@ -230,15 +230,14 @@ class CustomNetworkProtocol ():
   ######################################
   #  receive network packet
   ######################################
-  def recv_packet (self, role, len=0):
+  def recv_packet (self, split=False, len=0):
     try:
       # @TODO@ Note that this method always receives bytes. So if you want to
       # convert to json, some mods will be needed here. Use the config.ini file.
       
       print ("Custom Network Protocol::recv_packet")
-      if role == "response":
+      if not split:
         print ("Recieving responses or full messages..")
-        #self.socket.send (b'dummy') #wtf
         packet = self.socket.recv_multipart ()[-1]
         return packet
       else:

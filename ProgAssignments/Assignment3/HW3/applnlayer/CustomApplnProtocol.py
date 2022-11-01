@@ -86,6 +86,11 @@ class CustomApplnProtocol ():
         self.ser_type = SerializationType.FBUFS
       else:  # Unknown; raise exception
         raise BadSerializationType (config["Application"]["Serialization"])
+      
+      if config["TCP"]["Split"] == "TRUE":
+        self.split = True
+      else:
+        self.split = False
 
       # Now obtain our transport object
       # @TODO
@@ -133,8 +138,7 @@ class CustomApplnProtocol ():
       ###################
       while len(buf) < 1024:
           buf += b"-"
-      #self.xport_obj.send_appln_msg (buf, len (buf), "message")
-      self.xport_obj.send_appln_msg (buf, len (buf), "response")
+      self.xport_obj.send_appln_msg (buf, len (buf), self.split)
     except Exception as e:
       raise e
 
@@ -171,8 +175,7 @@ class CustomApplnProtocol ():
       while len(buf) < 1024:
           buf += b"-"
 
-      self.xport_obj.send_appln_msg (buf, len (buf), "message")
-      #self.xport_obj.send_appln_msg (buf, len (buf), "response")
+      self.xport_obj.send_appln_msg (buf, len (buf), self.split)
     except Exception as e:
       raise e
 
@@ -204,7 +207,7 @@ class CustomApplnProtocol ():
       else:  # Unknown; raise exception
         raise BadMessageType ()
 
-      self.xport_obj.send_appln_msg(buf, len (buf), "response")
+      self.xport_obj.send_appln_msg(buf, len (buf), split=False)
 
     except Exception as e:
       raise e
@@ -223,8 +226,7 @@ class CustomApplnProtocol ():
       # Note, that in this assignment, we are not worrying about sending
       # transport segments etc and so what we receive from ZMQ is the complete
       # message.
-      request = self.xport_obj.recv_appln_msg (role="message")
-      #request = self.xport_obj.recv_appln_msg (role="response")
+      request = self.xport_obj.recv_appln_msg (split=self.split)
       if self.ser_type == SerializationType.FBUFS:
         request = szfb.deserialize(request)
       else:
@@ -247,7 +249,7 @@ class CustomApplnProtocol ():
       # Note, that in this assignment, we are not worrying about sending
       # transport segments etc and so what we receive from ZMQ is the complete
       # message.
-      response = self.xport_obj.recv_appln_msg (role="response")
+      response = self.xport_obj.recv_appln_msg (split=False)
       if self.ser_type == SerializationType.FBUFS:
         response = szfb.deserialize(response)
       else:
