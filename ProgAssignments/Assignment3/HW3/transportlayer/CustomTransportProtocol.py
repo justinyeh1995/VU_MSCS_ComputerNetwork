@@ -50,7 +50,7 @@ class CustomTransportProtocol ():
   # configure/initialize
   ###############################
   def initialize (self, config, ip, port, router=True):
-    ''' Initialize the object '''
+      ''' Initialize the object '''
 
     try:
       # Here we initialize any internal variables
@@ -126,14 +126,14 @@ class CustomTransportProtocol ():
              ###############################
              ## The logic is a bit odd rn ##
              ###############################
-             self.send_segment (seq_no, fullpacket[seq_no], random.randint(1,1), split, size) # keep resending until we establish handshakes
+             self.send_segment (seq_no, fullpacket[seq_no], random.randint(1,3), split, size) # keep resending until we establish handshakes
 
              #################
              ## Add timeout ##
              #################
-             seq_no_recv, token = self.recv_ACK(seq_no, timeout=10) # token can be '' or 'ACK' and it might wait for certain amount of time 
+             seq_no_recv, token = self.recv_ACK(seq_no, timeout=2000) # token can be '' or 'ACK' and it might wait for certain amount of time 
             
-            if token == b"ACK": # handshake established
+            if token == b"ACK" and seq_no_recv == seq_no: # handshake established
               print (f"Hankshake established for {seq_no}")
               seq_no += 1
 
@@ -197,11 +197,15 @@ class CustomTransportProtocol ():
   ## Used in Sender(Client) ##
   ############################
 
-  def recv_ACK(self, seq_no, timeout=10):
+  def recv_ACK(self, seq_no, timeout=2000):
     try:
       # receive an ACK to build handshake
       print ("Custom Transport Protocol::recv_transport_ACK")
-      seq_no, token = self.nw_obj.recv_packet (split=True)
+      #########################
+      ## Set Up Timeout Here ##
+      #########################
+      print (f"Timer for segment {seq_no} starts . . .")
+      seq_no, token = self.nw_obj.recv_packet_ACK (timeout=timeout)
       #start = end = time.time()
       #token = ''
       #while (end - start) <= timeout and token != b"ACK":

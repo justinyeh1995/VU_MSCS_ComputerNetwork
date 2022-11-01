@@ -249,3 +249,26 @@ class CustomNetworkProtocol ():
         print("Error at network layer::recv_packet")
         raise e
 
+  ######################################
+  #  receive network packet
+  ######################################
+  def recv_packet_ACK (self, timeout, len=0):
+    try:
+      # @TODO@ Note that this method always receives bytes. So if you want to
+      # convert to json, some mods will be needed here. Use the config.ini file.
+      ##################
+      ## Timer Begins ##
+      ##################
+      event = zmq.Poller().poll( timeout = timeout, flags = zmq.POLLIN )
+      if not event: # event is not 0 
+        print ("Custom Network Protocol::recv_packet_ACK :))))")
+        packet = self.socket.recv_multipart ()[-1]
+        b_seq_no, payload = packet.split(b"+++")
+        return int(b_seq_no.decode()), payload
+      else:
+        print ("Custom Network Protocol::recv_packet_ACK timeout :(((((")
+        return -1, b'' # bad seq_no, empty payload
+
+    except Exception as e:
+        print("Error at network layer::recv_packet")
+        raise e
