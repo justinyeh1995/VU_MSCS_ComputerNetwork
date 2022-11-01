@@ -259,8 +259,9 @@ class CustomNetworkProtocol ():
       ##################
       ## Timer Begins ##
       ##################
-      event = zmq.Poller().poll( timeout = timeout, flags = zmq.POLLIN )
-      if not event: # event is not 0 
+      #event_dict = dict(zmq.Poller().poll( timeout = timeout))
+      event = self.socket.poll( timeout = timeout, flags = zmq.POLLIN )
+      if event: # event is not 0 
         print ("Custom Network Protocol::recv_packet_ACK :))))")
         packet = self.socket.recv_multipart ()[-1]
         b_seq_no, payload = packet.split(b"+++")

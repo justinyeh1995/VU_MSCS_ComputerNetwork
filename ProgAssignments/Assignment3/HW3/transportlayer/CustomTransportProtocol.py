@@ -50,8 +50,7 @@ class CustomTransportProtocol ():
   # configure/initialize
   ###############################
   def initialize (self, config, ip, port, router=True):
-      ''' Initialize the object '''
-
+    ''' Initialize the object '''
     try:
       # Here we initialize any internal variables
       print ("Custom Transport Protocol Object: Initialize")
@@ -142,16 +141,18 @@ class CustomTransportProtocol ():
         #########
 
         elif self.protocol == "GBN":
-            print("GO-BACK-N")
+          print("GO-BACK-N")
 
         ########
         ## SR ##
         ########
 
         elif self.protocol == "SR":
-            print("SR")
+          print("SR")
           l = r = 0 # left, right pointers for sliding window.
-          self.send_segment (0, b'dummy', 1, "response") # not sure why we should do this but I kept failing without this further step
+
+        self.send_segment (0, b'dummy', 1, split=False) # not sure why we should do this but I kept failing without this further step
+
       print("All segments sent!")
         
     except Exception as e:
@@ -269,7 +270,7 @@ class CustomTransportProtocol ():
         elif self.protocol == "SR":
             print("SR")
         appln_msg = b''.join(appln_msg) # need to print out & check here
-        dummy = self.recv_segment ("response") # not sure
+        dummy = self.recv_segment (split=False) # not sure
       print ("===================================")
       print ("Recieved full messages")
       print (appln_msg)
