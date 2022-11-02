@@ -14,6 +14,8 @@ import sys    # for syspath and system exception
 import random
 import time
 import zmq
+import concurrent.futures # for constructing a functional timer
+from threading import Event # for constructing a functional timer
 
 # add to the python system path so that packages can be found relative to
 # this directory
@@ -142,6 +144,25 @@ class CustomTransportProtocol ():
 
         elif self.protocol == "GBN":
           print("GO-BACK-N")
+          N = 8
+          l = 0 # left pointer
+          r = N-1 # right pointer
+          current_seqn = l
+          while r < len(fullpacket)):
+            for i in range(l,r+1):
+              print(f"Sending Segment {i}")
+              ###############################
+              ## Timer should start Here!! ##
+              ###############################
+              ## fire timer
+              self.send_segment (i, fullpacket[i], random.randint(1,3), split, size) # keep resending until we establish handshakes
+
+              #################
+              ## Add timeout ##
+              #################
+              seq_no_recv, token = self.recv_ACK(seq_no, timeout=2000) # token can be '' or 'ACK' and it might wait for certain amount of time 
+              if seq_no_recv != -1:
+                  current_seqn 
 
         ########
         ## SR ##
@@ -258,17 +279,54 @@ class CustomTransportProtocol ():
             
             ## for ABP there will be duplicate recieving issues 
             ## handle it here before append it to appln_msg
-            ## TO-DO
+            ##############################
+            ## Handle duplicate packets ##
+            ##############################
+            if seq_no < len(appln_msg):
+              continue
 
+            ########################
+            ## Stopping Condition ##
+            ########################
             appln_msg.append(segment)
-            # TO-DO #
-            # work with buffers for GBN / SR algo here
+            if len(appln_msg) >= 64:
+              break
+            
+        #########
+        ## GBN ##
+        #########
+
+        elif self.protocol == "GBN":
+          print("GO-BACK-N")
+          expect_seqn = 0
+          while True:
+            seq_n, segment = self.recv_segment (split) # reciever doesn't know whether there is a loss.
+            print(f'No. {seq_no} segment recieved')
+            if seq_n == expect_seqn:
+              appln_msg.append(segment)
+              self.send_ACK(seq_no)
+              expect_seqn += 1
+              print("In-Order packet")
+              print(f'Sent No. {seq_no} & ACK')
+              print(f" Expect to get {expect_seqn}")
+            else:
+              print("Out of Order packet :(( Discard it!")
+            ########################
+            ## Stopping Condition ##
+            ########################
             if len(appln_msg) >= 64:
                 break
-        elif self.protocol == "GBN":
-            print("GO-BACK-N")
+
+        ########
+        ## SR ##
+        ########
+
         elif self.protocol == "SR":
-            print("SR")
+          print("SR")
+
+        ##################
+        ## Assemble Msg ##
+        ##################
         appln_msg = b''.join(appln_msg) # need to print out & check here
         dummy = self.recv_segment (split=False) # not sure
       print ("===================================")

@@ -42,8 +42,6 @@ from threading import Event
 
 import random
 
-​
-
 ####################################################
 
 #  timer method
@@ -72,13 +70,9 @@ def timer (ev, seq, timeout):
 
   print ("seq {}'s timer method ended after {} seconds".format (seq, elapsed_time))
 
-​
-
   # return the seq number
 
   return seq, elapsed_time
-
-​
 
 ###############################################
 
@@ -86,23 +80,15 @@ def timer (ev, seq, timeout):
 
 ###############################################
 
-​
-
-​
-
 # Note that this code in reality is not doing any networking code. But we are
 
 # making it look like this sort of logic can be used in the timer handling
-
-​
 
 WINDOW_SIZE = 5
 
 # create as many event objects as window size
 
 event_list = [Event () for i in range (WINDOW_SIZE)]  
-
-​
 
 # Now, create as many concurrent threads as the window size.  The example in
 
@@ -132,10 +118,6 @@ with concurrent.futures.ThreadPoolExecutor (max_workers=WINDOW_SIZE) as executor
 
   future_objs = {executor.submit (timer, event_list[seq], seq, 20): seq for seq in range (WINDOW_SIZE)}
 
-​
-
-​
-
   # Now think as if we are sending as many packets as our window size to our server
 
   # and then wait to receive ACKs. To mimic this behavior, we just sleep for a short
@@ -145,8 +127,6 @@ with concurrent.futures.ThreadPoolExecutor (max_workers=WINDOW_SIZE) as executor
   print ("Starting local timer to mimic sending and waiting for reply to show up")
 
   time.sleep (5)
-
-​
 
   # Now use random number logic to mimic delayed/lost ACK. For others, we
 
@@ -158,8 +138,6 @@ with concurrent.futures.ThreadPoolExecutor (max_workers=WINDOW_SIZE) as executor
 
   ev4acks_rcvd = random.sample (event_list, k=3)
 
-​
-
   # now cancel timers for acks received
 
   print ("Main thread woken up; let us cancel timers for successful acks received")
@@ -167,8 +145,6 @@ with concurrent.futures.ThreadPoolExecutor (max_workers=WINDOW_SIZE) as executor
   for ev in ev4acks_rcvd:
 
     ev.set ()  # the set method lets the waiting event object to cancel the wait
-
-​
 
   # We will see below that some futures are completed because their callable function
 
