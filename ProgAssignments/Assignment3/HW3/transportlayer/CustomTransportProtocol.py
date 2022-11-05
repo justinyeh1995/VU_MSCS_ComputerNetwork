@@ -147,28 +147,26 @@ class CustomTransportProtocol ():
           print("GO-BACK-N")
           N = 8
           base = go_back = 0
-          ### some workaround probably a bad idea 
-          while True:
-            seq_recv, token = self.recv_ACK(timeout=2000) # token can be '' or 'ACK' and it might wait for certain amount of time 
-            if seq_recv == -1:
-                break
+          lastpacket = len(fullpacket) - 1
+
           for i in range(N):
             print(f"Sending {i}-th segment")
             self.send_segment (i, fullpacket[i], random.choices([1,2,3],[0.85,0.1,0.05])[0], split, size) # keep resending until we establish handshakes
 
           while True:
+            print("Our Main Purpose")
             seq_recv, token = self.recv_ACK(timeout=2000) # token can be '' or 'ACK' and it might wait for certain amount of time 
-            print(seq_recv)
+            print(f"Custom Transport Layer at Client got {seq_recv}, {token}")
             if seq_recv == base:
               base += 1
-              if base+N-1 <= len(fullpacket)-1:
-                self.send_segment (base+N-1, fullpacket[base+N-1], random.choices([1,2,3],[0.85,0.1,0.05])[0], split, size) # keep resending until we establish handshakes
+              nextpacket = base+N-1
+              if nextpacket <= lastpacket:
+                self.send_segment (nextpacket, fullpacket[nextpacket], random.choices([1,2,3],[0.85,0.1,0.05])[0], split, size) # keep resending until we establish handshakes
                 print(f"Sending {base+N-1}-th segment")
+            elif seq_recv == base - 1:
+              print ("Duplicate ACK")
             else:
-              # release resourse
-              for i in range(base,min(base+N,64)):
-                seq_recv, token = self.recv_ACK(timeout=2) # token can be '' or 'ACK' and it might wait for certain amount of time 
-              # Go-Back-N
+              assert seq_recv == -1
               print(f"Go-Back-{base}")
               for i in range(base,min(base+N,64)):
                 self.send_segment (i, fullpacket[i], random.choices([1,2,3],[0.85,0.1,0.05])[0], split, size) # keep resending until we establish handshakes
@@ -301,20 +299,23 @@ class CustomTransportProtocol ():
 
         elif self.protocol == "GBN":
           print("GO-BACK-N")
-          expect_seqno = 0
+          expect_recv = 0
           while True:
-            seq_no, segment = self.recv_segment (split) # reciever doesn't know whether there is a loss.
-            print(f'No. {seq_no} segment recieved')
-            if seq_no == expect_seqno:
+            # recieve msg from the client/router
+            recv_no, segment = self.recv_segment (split) # if packet is lost -> recv = -1 , out of order recv
+            print(f'No. {recv_no} segment recieved')
+            if recv_no == expect_recv:
               appln_msg.append(segment)
-              self.send_ACK(seq_no)
-              expect_seqno += 1
+              self.send_ACK(recv_no)
+              expect_recv += 1
               print("In-Order packet")
-              print(f'Sent No. {seq_no} & ACK')
-              print(f"Expect to get {expect_seqno}")
+              print(f'Sent No. {recv_no} & ACK')
+              print(f"Expect to get {expect_recv}")
             else:
-              print("Out of Order packet :(( Discard it!")
-              self.send_ACK(seq_no)###this is wrongly done
+              if expect_recv > 0:
+                in_order = expect_recv - 1
+                self.send_ACK(in_order)###this is wrongly done
+                print("Out of Order packet :(( Discard it! \n Resend {in_order} ACK")
 
             ########################
             ## Stopping Condition ##

@@ -98,7 +98,6 @@ class CustomNetworkProtocol ():
         # since we are client, we connect
         try:
           self.socket = self.ctx.socket (zmq.DEALER)
-          #self.socket = self.ctx.socket (zmq.REQ)
         except zmq.ZMQError as err:
           print ("ZeroMQ Error obtaining context: {}".format (err))
           return
@@ -210,18 +209,10 @@ class CustomNetworkProtocol ():
   ##################################
   def send_packet_ACK (self, segment, size):
     try:
-
-      ###### to-do ###########
-      ## handle packet here ##
-      ########################
       seq_no, packet = segment
       byte_seq_no = (str(seq_no)+'+++').encode()
       # here, we simply delegate to our zmq socket to send the info
       print ("custom network protocol::send_packet_ACK")
-      # @todo@ - this may need mod depending on json or serialized packet
-      #######################################
-      ## constrain the size of packet here ##
-      #######################################
       self.socket.send_multipart ([b'',byte_seq_no + packet])
 
     except Exception as e:
@@ -243,15 +234,16 @@ class CustomNetworkProtocol ():
       else:
         print ("Recieving Chunked Messages..")
         packet = self.socket.recv_multipart ()[-1]
+        print(packet)
         b_seq_no, payload = packet.split(b"+++")
         return int(b_seq_no.decode()), payload
     except Exception as e:
         print("Error at network layer::recv_packet")
         raise e
 
-  ######################################
-  #  receive network packet
-  ######################################
+  ##############################
+  ##  receive network packet  ##
+  ##############################
   def recv_packet_ACK (self, timeout, len=0):
     try:
       # @TODO@ Note that this method always receives bytes. So if you want to
@@ -259,13 +251,15 @@ class CustomNetworkProtocol ():
       ##################
       ## Timer Begins ##
       ##################
-      #event_dict = dict(zmq.Poller().poll( timeout = timeout))
       event = self.socket.poll( timeout = timeout, flags = zmq.POLLIN )
       if event: # event is not 0 
         print ("Custom Network Protocol::recv_packet_ACK :))))")
         packet = self.socket.recv_multipart ()[-1]
         b_seq_no, payload = packet.split(b"+++")
         return int(b_seq_no.decode()), payload
+      ###########################################
+      ## Is there a better way to handle it ?? ##
+      ###########################################
       else:
         print ("Custom Network Protocol::recv_packet_ACK timeout :(((((")
         return -1, b'' # bad seq_no, empty payload
