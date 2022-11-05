@@ -161,7 +161,7 @@ class CustomTransportProtocol ():
               base += 1
               nextpacket = base+N-1
               if nextpacket <= lastpacket:
-                self.send_segment (nextpacket, fullpacket[nextpacket], random.choices([1,2,3],[0.85,0.1,0.05])[0], split, size) # keep resending until we establish handshakes
+                self.send_segment (nextpacket, fullpacket[nextpacket], random.choices([1,2,3],[0.85,0.1,0.05])[0], split, size)
                 print(f"Sending {base+N-1}-th segment")
             elif seq_recv == base - 1:
               print ("Duplicate ACK")
@@ -169,7 +169,7 @@ class CustomTransportProtocol ():
               assert seq_recv == -1
               print(f"Go-Back-{base}")
               for i in range(base,min(base+N,64)):
-                self.send_segment (i, fullpacket[i], random.choices([1,2,3],[0.85,0.1,0.05])[0], split, size) # keep resending until we establish handshakes
+                self.send_segment (i, fullpacket[i], random.choices([1,2,3],[0.85,0.1,0.05])[0], split, size) 
                 print(f"Resending {i}-th segment")
             if base == len(fullpacket):
               print("Done!")
@@ -180,8 +180,28 @@ class CustomTransportProtocol ():
         ########
 
         elif self.protocol == "SR":
+          '''
+          keeps track of wR and ensures that wR > ( snd_next − snd_una)
+          retransmits only unACKed packets
+          '''
           print("SR")
-          l = r = 0 # left, right pointers for sliding window.
+          base = go_back = 0
+          lastpacket = len(fullpacket) - 1
+
+          for i in range(N):
+            print(f"Sending {i}-th segment")
+            self.send_segment (i, fullpacket[i], random.choices([1,2,3],[0.85,0.1,0.05])[0], split, size) # keep resending until we establish handshakes
+
+          while True:
+            print("Our Main Purpose")
+            seq_recv, token = self.recv_ACK(timeout=2000) # token can be '' or 'ACK' and it might wait for certain amount of time 
+            print(f"Custom Transport Layer at Client got {seq_recv}, {token}")
+            if seq_recv == base:
+              base += 1
+              nextpacket = base+N-1
+              if nextpacket <= lastpacket:
+                self.send_segment (nextpacket, fullpacket[nextpacket], random.choices([1,2,3],[0.85,0.1,0.05])[0], split, size)
+                print(f"Sending {base+N-1}-th segment")
 
         print("sending dummy message")
         self.send_segment (0, b'dummy', 1, split=False) # not sure why we should do this but I kept failing without this further step
@@ -314,7 +334,7 @@ class CustomTransportProtocol ():
             else:
               if expect_recv > 0:
                 in_order = expect_recv - 1
-                self.send_ACK(in_order)###this is wrongly done
+                self.send_ACK(in_order)
                 print("Out of Order packet :(( Discard it! \n Resend {in_order} ACK")
 
             ########################
@@ -329,7 +349,47 @@ class CustomTransportProtocol ():
         ########
 
         elif self.protocol == "SR":
+          '''
+          buffers out-of-order packets (up to wR), for in-order delivery
+          ACKs all correctly (no error, but may be out-of-order) received packets individually, not cumulatively
+          '''
           print("SR")
+          expect_recv = 0
+          buff = []
+          buff_size = 8
+
+          while True:
+            recv_no, segment = self.recv_segment (split) # in order or out of order recv_no
+            print(f'No. {recv_no} segment recieved')
+            if rev_no in range(expect_recv, expect_recv+buff_size):
+              # in-order
+              if recv_no == expect_recv:
+                appln_msg.append(segment)
+                self.send_ACK(recv_no)
+                expect_recv += 1
+                print ("In-Order packet")
+                print (f'Sent No. {recv_no} & ACK')
+                print (f"Expect to get {expect_recv}")
+                print ("Lets check the buffer as well")
+                for i in range(len(buff)):
+              # out-of-order
+              else:
+                if expect_recv > 0:
+                  self.send_ACK(recv_no) # still send ack for out of order pkt # do we need to keep track of last buffer seq_no as well?
+                  print("Out of Order packet :((")
+                  if len(buff) < buff_size:
+                    buff.append(segment)
+              elif recv_no < expect_recv:
+                  self.send_ACK(recv_no)
+
+
+            ########################
+            ## Stopping Condition ##
+            ########################
+            if len(appln_msg) >= 64:
+              print("Recieve All")
+              break
+          
 
         ##################
         ## Assemble Msg ##
