@@ -128,7 +128,7 @@ class CustomTransportProtocol ():
              ###############################
              ## The logic is a bit odd rn ##
              ###############################
-             self.send_segment (seq_no, fullpacket[seq_no], random.randint(1,3), split, size) # keep resending until we establish handshakes
+             self.send_segment (seq_no, fullpacket[seq_no], random.choices([1,2,3],[0.85,0.1,0.05]), split, size) # keep resending until we establish handshakes
 
              #################
              ## Add timeout ##
@@ -153,10 +153,12 @@ class CustomTransportProtocol ():
 
           while True:
             seq_recv, token = self.recv_ACK(timeout=2000) # token can be '' or 'ACK' and it might wait for certain amount of time 
+            print(seq_recv)
             if seq_recv == base:
               base += 1
-              self.send_segment (min(base+N-1,63), fullpacket[min(base+N-1,63)], random.choices([1,2,3],[0.85,0.1,0.05])[0], split, size) # keep resending until we establish handshakes
-              print(f"Sending {min(base+N-1,63)}-th segment")
+              if base+N-1 <= len(fullpacket)-1:
+                self.send_segment (base+N-1, fullpacket[base+N-1], random.choices([1,2,3],[0.85,0.1,0.05])[0], split, size) # keep resending until we establish handshakes
+                print(f"Sending {base+N-1}-th segment")
             else:
               # release resourse
               for i in range(base,min(base+N,64)):
@@ -165,7 +167,7 @@ class CustomTransportProtocol ():
               print(f"Go-Back-{base}")
               for i in range(base,min(base+N,64)):
                 self.send_segment (i, fullpacket[i], random.choices([1,2,3],[0.85,0.1,0.05])[0], split, size) # keep resending until we establish handshakes
-                print(f"Sending {i}-th segment")
+                print(f"Resending {i}-th segment")
             if base == len(fullpacket):
               print("Done!")
               break
