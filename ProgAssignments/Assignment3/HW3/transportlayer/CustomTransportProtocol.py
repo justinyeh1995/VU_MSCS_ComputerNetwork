@@ -14,6 +14,7 @@ import sys    # for syspath and system exception
 import random
 import time
 import zmq
+import numpy as np
 import concurrent.futures # for constructing a functional timer
 from threading import Event # for constructing a functional timer
 
@@ -132,7 +133,7 @@ class CustomTransportProtocol ():
              #################
              ## Add timeout ##
              #################
-             seq_no_recv, token = self.recv_ACK(seq_no, timeout=2000) # token can be '' or 'ACK' and it might wait for certain amount of time 
+             seq_no_recv, token = self.recv_ACK(timeout=2000) # token can be '' or 'ACK' and it might wait for certain amount of time 
             
             if token == b"ACK" and seq_no_recv == seq_no: # handshake established
               print (f"Hankshake established for {seq_no}")
@@ -145,24 +146,29 @@ class CustomTransportProtocol ():
         elif self.protocol == "GBN":
           print("GO-BACK-N")
           N = 8
-          l = 0 # left pointer
-          r = N-1 # right pointer
-          current_seqn = l
-          while r < len(fullpacket)):
-            for i in range(l,r+1):
-              print(f"Sending Segment {i}")
-              ###############################
-              ## Timer should start Here!! ##
-              ###############################
-              ## fire timer
-              self.send_segment (i, fullpacket[i], random.randint(1,3), split, size) # keep resending until we establish handshakes
+          base = go_back = 0
+          for i in range(N):
+            print(f"Sending {i}-th segment")
+            self.send_segment (i, fullpacket[i], random.choices([1,2,3],[0.85,0.1,0.05])[0], split, size) # keep resending until we establish handshakes
 
-              #################
-              ## Add timeout ##
-              #################
-              seq_no_recv, token = self.recv_ACK(seq_no, timeout=2000) # token can be '' or 'ACK' and it might wait for certain amount of time 
-              if seq_no_recv != -1:
-                  current_seqn 
+          while True:
+            seq_recv, token = self.recv_ACK(timeout=2000) # token can be '' or 'ACK' and it might wait for certain amount of time 
+            if seq_recv == base:
+              base += 1
+              self.send_segment (min(base+N-1,63), fullpacket[min(base+N-1,63)], random.choices([1,2,3],[0.85,0.1,0.05])[0], split, size) # keep resending until we establish handshakes
+              print(f"Sending {min(base+N-1,63)}-th segment")
+            else:
+              # release resourse
+              for i in range(base,min(base+N,64)):
+                seq_recv, token = self.recv_ACK(timeout=2) # token can be '' or 'ACK' and it might wait for certain amount of time 
+              # Go-Back-N
+              print(f"Go-Back-{base}")
+              for i in range(base,min(base+N,64)):
+                self.send_segment (i, fullpacket[i], random.choices([1,2,3],[0.85,0.1,0.05])[0], split, size) # keep resending until we establish handshakes
+                print(f"Sending {i}-th segment")
+            if base == len(fullpacket):
+              print("Done!")
+              break
 
         ########
         ## SR ##
@@ -172,6 +178,7 @@ class CustomTransportProtocol ():
           print("SR")
           l = r = 0 # left, right pointers for sliding window.
 
+        print("sending dummy message")
         self.send_segment (0, b'dummy', 1, split=False) # not sure why we should do this but I kept failing without this further step
 
       print("All segments sent!")
@@ -219,26 +226,14 @@ class CustomTransportProtocol ():
   ## Used in Sender(Client) ##
   ############################
 
-  def recv_ACK(self, seq_no, timeout=2000):
+  def recv_ACK(self, timeout=2000):
     try:
       # receive an ACK to build handshake
       print ("Custom Transport Protocol::recv_transport_ACK")
       #########################
       ## Set Up Timeout Here ##
       #########################
-      print (f"Timer for segment {seq_no} starts . . .")
       seq_no, token = self.nw_obj.recv_packet_ACK (timeout=timeout)
-      #start = end = time.time()
-      #token = ''
-      #while (end - start) <= timeout and token != b"ACK":
-      #  #try:
-      #  seq_no, token = self.nw_obj.recv_packet (len)
-      #  #  print ("Recieved ACK from the server")
-      #  #except zmq.Again as e:
-      #  #  print ("No message received yet")
-
-      #  end = time.time()
-      #  print(end-start)
       return seq_no, token
     
     except Exception as e:
@@ -290,6 +285,7 @@ class CustomTransportProtocol ():
             ########################
             appln_msg.append(segment)
             if len(appln_msg) >= 64:
+              print("Recieve All")
               break
             
         #########
@@ -298,24 +294,27 @@ class CustomTransportProtocol ():
 
         elif self.protocol == "GBN":
           print("GO-BACK-N")
-          expect_seqn = 0
+          expect_seqno = 0
           while True:
-            seq_n, segment = self.recv_segment (split) # reciever doesn't know whether there is a loss.
+            seq_no, segment = self.recv_segment (split) # reciever doesn't know whether there is a loss.
             print(f'No. {seq_no} segment recieved')
-            if seq_n == expect_seqn:
+            if seq_no == expect_seqno:
               appln_msg.append(segment)
               self.send_ACK(seq_no)
-              expect_seqn += 1
+              expect_seqno += 1
               print("In-Order packet")
               print(f'Sent No. {seq_no} & ACK')
-              print(f" Expect to get {expect_seqn}")
+              print(f"Expect to get {expect_seqno}")
             else:
               print("Out of Order packet :(( Discard it!")
+              self.send_ACK(seq_no)###this is wrongly done
+
             ########################
             ## Stopping Condition ##
             ########################
             if len(appln_msg) >= 64:
-                break
+              print("Recieve All")
+              break
 
         ########
         ## SR ##
