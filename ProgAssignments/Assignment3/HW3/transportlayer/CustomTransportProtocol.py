@@ -128,7 +128,7 @@ class CustomTransportProtocol ():
              ###############################
              ## The logic is a bit odd rn ##
              ###############################
-             self.send_segment (seq_no, fullpacket[seq_no], random.choices([1,2,3],[0.85,0.1,0.05]), split, size) # keep resending until we establish handshakes
+             self.send_segment (seq_no, fullpacket[seq_no], random.choices([1,2,3],[0.85,0.1,0.05])[0], split, size) # keep resending until we establish handshakes
 
              #################
              ## Add timeout ##
