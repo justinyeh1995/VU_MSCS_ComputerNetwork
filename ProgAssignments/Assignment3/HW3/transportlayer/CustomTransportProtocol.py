@@ -147,6 +147,11 @@ class CustomTransportProtocol ():
           print("GO-BACK-N")
           N = 8
           base = go_back = 0
+          ### some workaround probably a bad idea 
+          while True:
+            seq_recv, token = self.recv_ACK(timeout=2000) # token can be '' or 'ACK' and it might wait for certain amount of time 
+            if seq_recv == -1:
+                break
           for i in range(N):
             print(f"Sending {i}-th segment")
             self.send_segment (i, fullpacket[i], random.choices([1,2,3],[0.85,0.1,0.05])[0], split, size) # keep resending until we establish handshakes
