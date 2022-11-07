@@ -15,6 +15,7 @@ import random
 import time
 import zmq
 import numpy as np
+from collections import OrderedDict
 import concurrent.futures # for constructing a functional timer
 from threading import Event # for constructing a functional timer
 
@@ -196,11 +197,13 @@ class CustomTransportProtocol ():
           base = 0 # the smallest seq# unACK pkt
           lastpacket = len(fullpacket) - 1
           unACK = set() # cannot exceed window size(N)
+          sent = 0
 
           for i in range(N):
             print(f"Sending {i}-th segment")
             self.send_segment (i, fullpacket[i], random.choices([1,2,3],[0.85,0.1,0.05])[0], split, size) # keep resending until we establish handshakes
             unACK.add(i)
+            sent += 1
 
           base = min(unACK) #0
           send_next = base + N #4
@@ -220,17 +223,20 @@ class CustomTransportProtocol ():
               unACK.add(send_next)
               send_next += 1
               
+              sent += 1
+              
             else:
               print (f"Ignore. Don't send anything..")
 
-            if seq_recv in unACK:
+            if seq_recv in unACK and seq_recv in range(base, send_next+1):
               print (f"Custom Transport Layer at Client remove {seq_recv} in buffer")
               unACK.remove(seq_recv) # remove unACK(seq_recv) from buffer
-              if base == min(unACK):
-                print (f"Base stays the same")
-              else:
-                print (f"base from {base} to min(unACK)")
-                base = min(unACK)
+              if unACK:
+                if base == min(unACK):
+                  print (f"Base stays the same")
+                else:
+                  print (f"base from {base} to {min(unACK)}")
+                  base = min(unACK)
 
             ############################
             ## Retransmit timeout pkt ##
@@ -238,12 +244,13 @@ class CustomTransportProtocol ():
             ## TO-DO ##
             for seq in sorted(unACK):
               if seq_recv > seq:
-                self.send_segment (seq, fullpacket[seq], random.choices([1,2,3],[0.85,0.1,0.05])[0], split, size)
+                self.send_segment (seq, fullpacket[seq], random.choices([1,2,3],[0.85,0.15,0.00])[0], split, size)
+                sent += 1
             # edge cases: unsure if the logic holds
-            if seq_recv == -1:
-              self.send_segment (base, fullpacket[base], random.choices([1,2,3],[0.85,0.1,0.05])[0], split, size)
-              unACK.add(base) #??
-
+            #if seq_recv == -1:
+            #  self.send_segment (base, fullpacket[base], random.choices([1,2,3],[0.85,0.1,0.05])[0], split, size)
+            #  unACK.add(base) #??
+            print(sent)
             ########################
             ## Stopping condition ##
             ########################
@@ -407,18 +414,24 @@ class CustomTransportProtocol ():
           '''
           print("SR")
           expect_recv = 0
+          base = 0
           buff = []
           buff_size = 8
-          buff = collections.OrderedDict()
+          buff = OrderedDict()
  
+          recv = 0
           while True:
             recv_no, segment = self.recv_segment (split) # in order or out of order recv_no
+            recv += 1
+            print(recv)
             print(f'No. {recv_no} segment recieved')
-            if rev_no in range(expect_recv, expect_recv+buff_size):
+            if recv_no in range(expect_recv, expect_recv+buff_size):
+
+              self.send_ACK(recv_no)
+              
               # in-order
               if recv_no == expect_recv:
                 appln_msg.append(segment)
-                self.send_ACK(recv_no)
                 expect_recv += 1
                 print ("In-Order packet")
                 print (f'Sent No. {recv_no} & ACK')
@@ -426,18 +439,22 @@ class CustomTransportProtocol ():
                 print ("Lets check the buffer as well")
                 for seq, seg in buff.items():
                   appln_msg.append(seg)
+                # flush
+                buff = OrderedDict()
                     
-
               # out-of-order
+              # do not move the window
               else:
-                if expect_recv > 0:
-                  self.send_ACK(recv_no) # still send ack for out of order pkt # do we need to keep track of last buffer seq_no as well?
-                  print("Out of Order packet :((")
-                  if len(buff) < buff_size:
-                    buff[rev_no] = segemnt
-              elif recv_no < expect_recv:
-                  self.send_ACK(recv_no)
+                print("Out of Order packet :(( Let's buffer them")
+                if len(buff) < buff_size:
+                  buff[recv_no] = segment
 
+            elif recv_no < expect_recv:
+              print ("recv_no < than expect_recv {expect_recv}")
+              #self.send_ACK(recv_no)
+
+            else:
+              print ("Ignore it...")
 
             ########################
             ## Stopping Condition ##
