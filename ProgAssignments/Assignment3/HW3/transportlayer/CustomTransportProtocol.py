@@ -197,19 +197,18 @@ class CustomTransportProtocol ():
           base = 0 # the smallest seq# unACK pkt
           lastpacket = len(fullpacket) - 1
           unACK = set() # cannot exceed window size(N)
-          sent = 0
 
           for i in range(N):
             print(f"Sending {i}-th segment")
             self.send_segment (i, fullpacket[i], random.choices([1,2,3],[0.85,0.1,0.05])[0], split, size) # keep resending until we establish handshakes
             unACK.add(i)
-            sent += 1
 
           base = min(unACK) #0
           send_next = base + N #4
 
           while True:
-            print("Our Main Purpose")
+            print(f"Base {base}; Send_next {send_next}")
+            print(unACK)
               
             seq_recv, token = self.recv_ACK(timeout=2000) # token can be '' or 'ACK' and it might wait for certain amount of time 
             print(f"Custom Transport Layer at Client got ACK {seq_recv}, {token}")
@@ -219,14 +218,13 @@ class CustomTransportProtocol ():
                 and send_next <= lastpacket
                 ):
               print ("We still have room for sending the next pkt")
+              print(f"Sending {send_next}-th segment")
               self.send_segment (send_next, fullpacket[send_next], random.choices([1,2,3],[0.85,0.1,0.05])[0], split, size)
               unACK.add(send_next)
-              send_next += 1
-              
-              sent += 1
+              send_next += 1 # move the window
               
             else:
-              print (f"Ignore. Don't send anything..")
+              print (f"{send_next} Pkt is out of the window. Don't send anything..")
 
             if seq_recv in unACK and seq_recv in range(base, send_next+1):
               print (f"Custom Transport Layer at Client remove {seq_recv} in buffer")
@@ -242,15 +240,16 @@ class CustomTransportProtocol ():
             ## Retransmit timeout pkt ##
             ############################
             ## TO-DO ##
+            ## Resending so much time
             for seq in sorted(unACK):
               if seq_recv > seq:
                 self.send_segment (seq, fullpacket[seq], random.choices([1,2,3],[0.85,0.15,0.00])[0], split, size)
-                sent += 1
+
             # edge cases: unsure if the logic holds
             #if seq_recv == -1:
             #  self.send_segment (base, fullpacket[base], random.choices([1,2,3],[0.85,0.1,0.05])[0], split, size)
             #  unACK.add(base) #??
-            print(sent)
+
             ########################
             ## Stopping condition ##
             ########################
@@ -419,12 +418,11 @@ class CustomTransportProtocol ():
           buff_size = 8
           buff = OrderedDict()
  
-          recv = 0
           while True:
+            print ("Start receiving")
             recv_no, segment = self.recv_segment (split) # in order or out of order recv_no
-            recv += 1
-            print(recv)
-            print(f'No. {recv_no} segment recieved')
+            print(f'No. {recv_no} segment received')
+            print(f'Expecting No. {expect_recv} segment')
             if recv_no in range(expect_recv, expect_recv+buff_size):
 
               self.send_ACK(recv_no)
@@ -435,10 +433,13 @@ class CustomTransportProtocol ():
                 expect_recv += 1
                 print ("In-Order packet")
                 print (f'Sent No. {recv_no} & ACK')
-                print (f"Expect to get {expect_recv}")
                 print ("Lets check the buffer as well")
+                print (buff.items())
                 for seq, seg in buff.items():
                   appln_msg.append(seg)
+                  ## ??
+                  expect_recv += 1 ##??
+                print (f"Expect to get {expect_recv}")
                 # flush
                 buff = OrderedDict()
                     
@@ -450,11 +451,12 @@ class CustomTransportProtocol ():
                   buff[recv_no] = segment
 
             elif recv_no < expect_recv:
-              print ("recv_no < than expect_recv {expect_recv}")
-              #self.send_ACK(recv_no)
+              print (f"recv_no {recv_no} < expect_recv {expect_recv}")
+              self.send_ACK(recv_no)
 
             else:
               print ("Ignore it...")
+              self.send_ACK(recv_no)
 
             ########################
             ## Stopping Condition ##
