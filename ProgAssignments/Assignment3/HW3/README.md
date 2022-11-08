@@ -4,7 +4,7 @@
 
 In the `config.in` file,
 
-pick your idea protocol under the field `TCP`
+pick your idea protocol under the field `[TCP]`
 
 ```sh=
 PROTOCOL=ABP
@@ -14,7 +14,22 @@ PROTOCOL=GBN
 PROTOCOL=SR
 ```
 
+
+
 #### 2. Run the experiments
+
+**Config the `DB` under the `[TCP]` according to the iexpected experiment**
+
+for Experiment Single & Linear
+```sh
+DB=12
+```
+for Experiment Tree
+```sh
+DB=3
+```
+
+Then, start running the scripts as followed
 
 ##### Single
 
