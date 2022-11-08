@@ -21,14 +21,26 @@ import zmq    # this package must be imported for ZMQ to work
 import re
 import subprocess
 import pandas as pd
+import configparser # for configuration parsing
 
-testDB = pd.read_csv("./RouteDB.csv")
+testDB = pd.read_csv("./RouteDB_12.csv")
 ip2host = {f"10.0.0.{i}": f"H{i}" for i in range(1,30)}
 host2ip = { f"H{i}": f"10.0.0.{i}" for i in range(1,30)}
 ##################################
 # Driver program
 ##################################
 def driver (args):
+
+  # Now, get the configuration object
+  config = configparser.ConfigParser ()
+  config.read (args.config)
+
+  # initialize the config object
+  if config["TCP"]["DB"] == "12":
+    self.DB = pd.read_csv("./RouteDB_12.csv")
+  else:
+    self.DB = pd.read_csv("./RouteDB_3.csv")
+    
   #######################
   ## Intinalize Router ##
   #######################
@@ -145,7 +157,7 @@ def driver (args):
         try:
           ## Get host ip & convert it to host name
           print("Obtaining the Next Hop Host Name")
-          nexthost = testDB.loc[testDB.host==ip2host[my_ip]].loc[testDB.destination==final_dest].nexthop.values[0] # replace "10.0.0.5" with final destination
+          nexthost = self.DB.loc[self.DB.host==ip2host[my_ip]].loc[self.DB.destination==final_dest].nexthop.values[0] # replace "10.0.0.5" with final destination
           nexthop = host2ip[nexthost]
           print(f"Next Router HostName is {nexthost}")
           print(f"Next Router Host IP is {nexthop}")
@@ -292,6 +304,7 @@ def parseCmdLineArgs ():
   parser = argparse.ArgumentParser ()
 
   # add optional arguments
+  parser.add_argument ("-c", "--config", default="config.ini", help="configuration file (default: config.ini")
   parser.add_argument ("-a", "--myaddr", default="*", help="Interface to bind to (default: *)")
   parser.add_argument ("-p", "--myport", type=int, default=4444, help="Port to bind to (default: 4444)")
   args = parser.parse_args ()

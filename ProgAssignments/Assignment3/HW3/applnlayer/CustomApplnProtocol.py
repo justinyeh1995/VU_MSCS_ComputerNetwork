@@ -26,8 +26,6 @@ from transportlayer.CustomTransportProtocol import CustomTransportProtocol as XP
 import serialize_flatbuffer as szfb  # this is from the file serialize.py in the same directory
 import serialize_json as szjs  # this is from the file serialize.py in the same directory
 
-testDB = pd.read_csv("./RouteDB.csv")
-
 ############################################
 #  Serialization Enumeration Type
 ############################################
@@ -92,6 +90,10 @@ class CustomApplnProtocol ():
       else:
         self.split = False
 
+      if config["TCP"]["DB"] == "12":
+        self.DB = pd.read_csv("./RouteDB_12.csv")
+      else:
+        self.DB = pd.read_csv("./RouteDB_3.csv")
       # Now obtain our transport object
       # @TODO
       print ("Custom Appln Protocol::initialize - obtain transport object")

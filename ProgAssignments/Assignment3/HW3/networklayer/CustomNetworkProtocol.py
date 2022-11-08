@@ -27,7 +27,6 @@ import pandas as pd
 #
 # @TODO@ Add whatever make sense here.
 ############################################
-testDB = pd.read_csv("./RouteDB.csv")
 ip2host = {f"10.0.0.{i}": f"H{i}" for i in range(1,30)}
 host2ip = { f"H{i}": f"10.0.0.{i}" for i in range(1,30)}
 
@@ -65,6 +64,10 @@ class CustomNetworkProtocol ():
       self.ctx = zmq.Context ()
 
       # initialize the config object
+      if config["TCP"]["DB"] == "12":
+        self.DB = pd.read_csv("./RouteDB_12.csv")
+      else:
+        self.DB = pd.read_csv("./RouteDB_3.csv")
       
       # initialize our ZMQ socket
       #
@@ -130,7 +133,7 @@ class CustomNetworkProtocol ():
             regex_ip=re.search(r"[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}",ifconfig_output)
             my_ip = str(regex_ip.group(0))
             print(f"Router Host IP is {ip2host[my_ip]}")
-            nexthost = testDB.loc[testDB.host==ip2host[my_ip]].loc[testDB.destination==self.ip].nexthop.values[0]
+            nexthost = self.DB.loc[self.DB.host==ip2host[my_ip]].loc[self.DB.destination==self.ip].nexthop.values[0]
             nexthop = host2ip[nexthost]
             print(f"Next Router HostName is {nexthost}")
             print(f"Next Router Host IP is {nexthop}")
