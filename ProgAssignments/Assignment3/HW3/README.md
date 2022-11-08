@@ -1,6 +1,6 @@
-### How to run Hw3
+## How to run Hw3
 
-#### 1. Choose A Protocol
+### 1. Choose A Protocol
 
 In the `config.in` file,
 
@@ -14,9 +14,7 @@ PROTOCOL=GBN
 PROTOCOL=SR
 ```
 
-
-
-#### 2. Run the experiments
+### 2. Run the experiments
 
 **Config the `DB` under the `[TCP]` according to the iexpected experiment**
 
@@ -31,7 +29,7 @@ DB=3
 
 Then, start running the scripts as followed
 
-##### Single
+#### Single
 
 ```sh=
 bash hw3_1_topo.sh
@@ -43,7 +41,7 @@ in the mininet cli
 source command_12.sh 
 ```
 ---
-##### Linear
+#### Linear
 
 ```sh=
 bash hw3_2_topo.sh
@@ -56,7 +54,7 @@ source command_12.sh
 ```
 ---
  
-##### Tree
+#### Tree
 
 ```sh=
 bash hw3_3_topo.sh
@@ -69,9 +67,9 @@ source command_3.sh
 ``` 
 ---
 
-#### Misc
+### Misc
 
-##### Router
+#### Router
 
 One can close the router using ROUTER=FALSE under the field `TCP`
 
