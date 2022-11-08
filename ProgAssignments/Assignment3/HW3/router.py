@@ -208,7 +208,9 @@ def driver (args):
           # going to connect to. Here, we are using TCP sockets.
           print ("Router connecting to next hop")
           nexthopport = 4444
-          if nexthost in ["H5", "H6"]:
+          if config["TCP"]["DB"] == "12" and nexthost in ["H5", "H6"]:
+              nexthopport = 5555
+          if config["TCP"]["DB"] == "3" and nexthost in ["H19", "H27"]:
               nexthopport = 5555
           connect_string = "tcp://" + nexthop + ":" + str (nexthopport)
           print ("TCP client will be connecting to {}".format (connect_string))

@@ -69,10 +69,9 @@ class Refrigerator ():
       self.health_obj = ApplnProtoObj (False)  # the false flag indicates this is a client side
 
       # initialize the custom application objects
-      #self.groc_obj.initialize (config, args.groc_ip, args.groc_port, router=False)
-      #self.health_obj.initialize (config, args.status_ip, args.status_port, router=False)
-      self.groc_obj.initialize (config, args.groc_ip, args.groc_port, router=True)
-      self.health_obj.initialize (config, args.status_ip, args.status_port, router=True)
+      isOn = config["TCP"]["Router"] == "TRUE"
+      self.groc_obj.initialize (config, args.groc_ip, args.groc_port, router=isOn)
+      self.health_obj.initialize (config, args.status_ip, args.status_port, router=isOn)
 
     except Exception as e:
       raise e
@@ -163,7 +162,6 @@ class Refrigerator ():
 
       # To ensure that bad requests are handled correctly, initially let us first
       # try sending wrong message to wrong server.
-      '''
       # Test 1:
       # create a grocery order
       msg = self.gen_grocery_order_msg ()
@@ -184,7 +182,7 @@ class Refrigerator ():
       # now receive a response
       reply = self.groc_obj.recv_response () 
       print ("Received reply {}".format (reply))
-      '''
+
       # Test 3: 
       # Here in each iteration and depending on the ratio, we decide whether to
       # send Grocery Message or Health Status Message. These are sent correctly. 
