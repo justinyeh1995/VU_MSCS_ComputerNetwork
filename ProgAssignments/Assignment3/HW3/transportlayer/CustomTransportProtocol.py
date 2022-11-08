@@ -181,22 +181,12 @@ class CustomTransportProtocol ():
         ########
 
         elif self.protocol == "SR":
-          '''
-          keeps track of wR and ensures that wR > ( snd_next − snd_una)
-          retransmits only unACKed packets
-          '''
-          '''
-          if next available seq# in window, send packet
-          timeout(n)-> resend packet n and restart timer
-          received ACK(n) in [send_una, send_next]:
-            mark pkt n as recrived
-            if n is the smallest unACKed pkt, advance send_una to next unACKed seq#
-          '''
           print("SR")
           N = 8
           base = 0 # the smallest seq# unACK pkt
           lastpacket = len(fullpacket) - 1
           unACK = set() # cannot exceed window size(N)
+          resend = set()
 
           for i in range(N):
             print(f"Sending {i}-th segment")
@@ -242,13 +232,14 @@ class CustomTransportProtocol ():
             ## TO-DO ##
             ## Resending so much time
             for seq in sorted(unACK):
-              if seq_recv > seq:
+              if seq_recv > seq and seq not in resend:
                 self.send_segment (seq, fullpacket[seq], random.choices([1,2,3],[0.85,0.15,0.00])[0], split, size)
+                resend.add(seq)
 
-            # edge cases: unsure if the logic holds
-            #if seq_recv == -1:
-            #  self.send_segment (base, fullpacket[base], random.choices([1,2,3],[0.85,0.1,0.05])[0], split, size)
-            #  unACK.add(base) #??
+            # edge cases: it only happens for the last segment
+            if seq_recv == -1:
+              self.send_segment (base, fullpacket[base], random.choices([1,2,3],[0.85,0.1,0.05])[0], split, size)
+              unACK.add(base) 
 
             ########################
             ## Stopping condition ##
@@ -412,56 +403,67 @@ class CustomTransportProtocol ():
           ACKs all correctly (no error, but may be out-of-order) received packets individually, not cumulatively
           '''
           print("SR")
-          expect_recv = 0
-          base = 0
+          base = 0 # the smallest undelivered seq#
           buff = []
           buff_size = 8
           buff = OrderedDict()
+          recv = set() # for debugg purpose
  
           while True:
+            
             print ("Start receiving")
+            print (f'The smallest undelivered seq# is {base}')
             recv_no, segment = self.recv_segment (split) # in order or out of order recv_no
-            print(f'No. {recv_no} segment received')
-            print(f'Expecting No. {expect_recv} segment')
-            if recv_no in range(expect_recv, expect_recv+buff_size):
+            print (f'No. {recv_no} segment received')
+            recv.add(recv_no)
+            expect = set([i for i in range(max(recv) + 1)])
+            print ("What is still missing")
+            print (expect - recv)
+
+            if recv_no in range(base, base+buff_size):
 
               self.send_ACK(recv_no)
               
               # in-order
-              if recv_no == expect_recv:
+              if recv_no == base:
                 appln_msg.append(segment)
-                expect_recv += 1
+                base += 1 # move window
                 print ("In-Order packet")
                 print (f'Sent No. {recv_no} & ACK')
                 print ("Lets check the buffer as well")
                 print (buff.items())
-                for seq, seg in buff.items():
-                  appln_msg.append(seg)
-                  ## ??
-                  expect_recv += 1 ##??
-                print (f"Expect to get {expect_recv}")
-                # flush
-                buff = OrderedDict()
+
+                for seq in list(buff.keys()):
+                  if seq == base:
+                    appln_msg.append(buff[seq])
+                    base += 1 ## util now it is already recieve
+                    # flush
+                    del buff[seq]
+                print (f"Base is {base} after flushing")
                     
               # out-of-order
               # do not move the window
               else:
                 print("Out of Order packet :(( Let's buffer them")
-                if len(buff) < buff_size:
-                  buff[recv_no] = segment
+                buff[recv_no] = segment
+                #print (buff.items())
 
-            elif recv_no < expect_recv:
-              print (f"recv_no {recv_no} < expect_recv {expect_recv}")
+            elif recv_no < base:
+              print (f"Just some segment we already have as recv_no {recv_no} < base {base}")
               self.send_ACK(recv_no)
 
             else:
-              print ("Ignore it...")
+              print (f"recv_no {recv_no} is > base {base}")
+              print ("Let's still save it for future use...")
               self.send_ACK(recv_no)
+              print("And, it's also a Out of Order packet :(( Let's buffer them")
+              buff[recv_no] = segment
+              #print (buff.items())
 
             ########################
             ## Stopping Condition ##
             ########################
-            if len(appln_msg) >= 64:
+            if base == 64 or len(appln_msg) >= 64:
               print("Recieve All")
               break
           
@@ -471,6 +473,8 @@ class CustomTransportProtocol ():
         ##################
         appln_msg = b''.join(appln_msg) # need to print out & check here
         dummy = self.recv_segment (split=False) # not sure
+        print (dummy)
+
       print ("===================================")
       print ("Recieved full messages")
       print (appln_msg)
