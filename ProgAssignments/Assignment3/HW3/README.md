@@ -1,6 +1,6 @@
 ### How to run Hw3
 
-#### Choose A Protocol
+#### 1. Choose A Protocol
 
 In the `config.in` file,
 
@@ -14,7 +14,7 @@ PROTOCOL=GBN
 PROTOCOL=SR
 ```
 
-#### Run the experiments
+#### 2. Run the experiments
 
 ##### Single
 
@@ -54,8 +54,12 @@ source command_3.sh
 ``` 
 ---
 
-#### Router
+#### Misc
+
+##### Router
 
 One can close the router using ROUTER=FALSE under the field `TCP`
+
+----
 
 [Algorithm Ref](https://web.eecs.umich.edu/~sugih/courses/eecs489/lectures/26-FlowControl+ARQ.pdf)
