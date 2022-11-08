@@ -18,14 +18,8 @@ PROTOCOL=SR
 
 **Config the `DB` under the `[TCP]` according to the expected experiment**
 
-  - for Experiment Single & Linear
-  ```sh
-  DB=12
-  ```
-  - for Experiment Tree
-  ```sh
-  DB=3
-  ```
+  - for Experiment Single & Linear: `DB=12`
+  - for Experiment Tree: `DB=3`
 
 Then, start running the scripts as followed
 
