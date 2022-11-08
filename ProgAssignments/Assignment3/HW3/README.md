@@ -1,5 +1,5 @@
 
-### How to run Hw1
+### How to run Hw3
 
 ```sh=
 sudo mn -c && sudo mn --topo=single,3 --link=tc,delay=10ms

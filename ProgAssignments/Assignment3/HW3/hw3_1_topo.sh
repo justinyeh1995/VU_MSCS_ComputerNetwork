@@ -1,2 +1,2 @@
-sudo mn --topo=single,6 --link=tc
+sudo mn -c && sudo mn --topo=single,6 --link=tc
 
