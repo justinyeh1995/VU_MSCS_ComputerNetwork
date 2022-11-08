@@ -1,75 +1,31 @@
 
 ### How to run Hw3
 
+## 1 & 2
+
 ```sh=
-sudo mn -c && sudo mn --topo=single,3 --link=tc,delay=10ms
+bash hw3_1_topo.sh
+```
+or 
+```sh=
+bash hw3_2_topo.sh
 ```
 
 in the mininet cli
 
 ```sh=
-source command.sh
+source command_12.sh ## for (1)(2)
+```
+---
+ 
+## 3
+```sh=
+bash hw3_3_topo.sh
+```
+
+in the mininet cli
+
+```sh=
+source command_3.sh
 ``` 
 
-same with 
-```sh=
-sudo mn -c && sudo mn --topo=linear,3 --link=tc,delay=10ms 
-```
-&
-```sh=
-sudo mn -c && sudo mn --topo=tree,depth=3,fanout=3 --link=tc,delay=10ms
-```
-
-################################################################################################
-#
-# Author: Aniruddha Gokhale
-# Institution: Vanderbilt University
-# Course: CS4283/5283 Computer Networks
-#
-# Purpose:
-#    This directory contains the skeleton code that students can use to do their
-#    programming assignment. This particular code is tailored to suit PA1
-#    where our main purpose is to provide an Application Layer custom protocol
-#    that we have defined to support a Smart Refrigerator IoT edge device.
-#
-#    This refrigerator can send either a grocery order or a health status message
-#    to two different servers. The message format is defined in the specification.
-#    Data serialization can use either JSON or Flatbuffers. Others can easily be
-#    added.
-#
-#    We mimic the layers as follows:
-#
-#    Business Logic layer
-#    	Encoded in application level code as follows
-#	   (1) refrigerator.py - represents the client-side logic of the smart refrigerator
-#	   (2) grocery_server.py - represents the server-side logic of the grocery server
-#	   (3) health_server.py - represents the server-side logic of the health server
-#          (4) config.ini - represents a common system-wide set of configurations.
-#
-#    Application Layer
-#    	Defined under the applnlayer subfolder. This contains the following files:
-#	   (1) ApplnMessageTypes.py - defines skeletons for the 3 message types supported by our
-#                                     custom application protocol
-#          (2) CustomApplnProtocol.py - defines all the logic to send/receive the different
-#                                       messages and the exceptions that can be raised
-#
-#    Transport Layer
-#       Defined under the transportlayer subfolder. This contains the following files:
-#          (1) CustomTransportProtocol.py - mostly a No-Op; delegates to network layer
-#
-#
-#    Network Layer
-#       Defined under the networklayer subfolder. This contains the following files:
-#          (1) CustomNetworkProtocol.py - Mostly a No-OP. Simply delegates to ZeroMQ
-#
-#    Pseudo Link Layer
-#       Suported by our ZeroMQ messaging layer
-#
-#    (Pseudo) Physical Layer
-#       Supports the actual communication. This can be intra-host using localhost, or mininet,
-#       or Docker Swarm/Kubernetes cluster or actual distributed hosts
-#
-#
-#   Students should look at the @TODO@ markers in the different places of the code. This is
-#   where students need to supply code to do the actual work expected in this assignment
-#################################################################################################
