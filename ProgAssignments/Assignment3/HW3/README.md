@@ -6,15 +6,11 @@ In the `config.in` file,
 
 pick your idea protocol under the field `TCP`
 
-```sh
+```sh=
 PROTOCOL=ABP
-```
-or
-```sh
+# or
 PROTOCOL=GBN
-```
-or
-```sh
+# or
 PROTOCOL=SR
 ```
 
