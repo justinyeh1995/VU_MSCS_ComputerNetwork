@@ -14,8 +14,9 @@ PROTOCOL=GBN
 PROTOCOL=SR
 ```
 
+#### Run the experiments
 
-#### Single
+##### Single
 
 ```sh=
 bash hw3_1_topo.sh
@@ -27,7 +28,7 @@ in the mininet cli
 source command_12.sh 
 ```
 ---
-#### Linear
+##### Linear
 
 ```sh=
 bash hw3_2_topo.sh
@@ -40,7 +41,7 @@ source command_12.sh
 ```
 ---
  
-## Tree
+##### Tree
 
 ```sh=
 bash hw3_3_topo.sh
