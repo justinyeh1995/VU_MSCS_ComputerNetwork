@@ -9,7 +9,7 @@ bash hw3_1_topo.sh
 in the mininet cli
 
 ```sh=
-source command_12.sh ## for (1)(2)
+source command_12.sh 
 ```
 ---
 #### Linear
