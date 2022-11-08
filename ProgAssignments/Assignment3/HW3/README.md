@@ -21,7 +21,7 @@ bash hw3_2_topo.sh
 in the mininet cli
 
 ```sh=
-source command_12.sh ## for (1)(2)
+source command_12.sh 
 ```
 ---
  
