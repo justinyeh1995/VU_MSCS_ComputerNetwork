@@ -1,5 +1,24 @@
 ### How to run Hw3
 
+#### Choose A Protocol
+
+In the `config.in` file,
+
+pick your idea protocol under the field `TCP`
+
+```sh
+PROTOCOL=ABP
+```
+or
+```sh
+PROTOCOL=GBN
+```
+or
+```sh
+PROTOCOL=SR
+```
+
+
 #### Single
 
 ```sh=
@@ -37,5 +56,9 @@ in the mininet cli
 source command_3.sh
 ``` 
 ---
+
+#### Router
+
+One can close the router using ROUTER=FALSE under the field `TCP`
 
 [Algorithm Ref](https://web.eecs.umich.edu/~sugih/courses/eecs489/lectures/26-FlowControl+ARQ.pdf)
