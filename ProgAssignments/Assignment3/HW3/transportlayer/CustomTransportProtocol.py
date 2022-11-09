@@ -426,7 +426,6 @@ class CustomTransportProtocol ():
           '''
           print("SR")
           base = 0 # the smallest undelivered seq#
-          buff = []
           buff_size = 8
           buff = OrderedDict()
           recv = set() # for debugg purpose
