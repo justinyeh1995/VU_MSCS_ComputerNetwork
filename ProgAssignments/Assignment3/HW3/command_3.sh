@@ -9,4 +9,4 @@ h23 python3 router.py &> r23.log &
 h24 python3 router.py &> r24.log &
 h19 python3 grocery_server.py &> grocery.log &
 h27 python3 health_server.py &> health.log &
-h1 python3 refrigerator.py -g 10.0.0.19 -s 10.0.0.27 -i 100 | grep "Total" | awk '{print $NF}' > ABP_tree.csv 
+h1 python3 refrigerator.py -g 10.0.0.19 -s 10.0.0.27 -i 10 #0 | grep "Total" | awk '{print $NF}' > ABP_tree.csv 

@@ -147,31 +147,41 @@ class CustomTransportProtocol ():
         elif self.protocol == "GBN":
           print("GO-BACK-N")
           N = 8
-          base = 0
+          base = 0 # the smallest unACK seq#
+          send_nxt = 0
           lastpacket = len(fullpacket) - 1
 
           for i in range(N):
             print(f"Sending {i}-th segment")
             self.send_segment (i, fullpacket[i], random.choices([1,2,3],[0.85,0.1,0.05])[0], split, size) # keep resending until we establish handshakes
+            send_nxt += 1
 
           while True:
             print("Our Main Purpose")
             seq_recv, token = self.recv_ACK(timeout=2000) # token can be '' or 'ACK' and it might wait for certain amount of time 
             print(f"Custom Transport Layer at Client got {seq_recv}, {token}")
+
             if seq_recv == base:
-              base += 1
-              nextpacket = base+N-1
-              if nextpacket <= lastpacket:
-                self.send_segment (nextpacket, fullpacket[nextpacket], random.choices([1,2,3],[0.85,0.1,0.05])[0], split, size)
+              # ACK
+              base += 1 # move window
+              if send_nxt <= lastpacket:
+                self.send_segment (send_nxt, fullpacket[send_nxt], random.choices([1,2,3],[0.85,0.1,0.05])[0], split, size)
                 print(f"Sending {base+N-1}-th segment")
-            elif seq_recv == base - 1:
+                send_nxt += 1#base+N-1
+
+            elif seq_recv < base and seq_recv != -1:
               print ("Duplicate ACK")
+
             else:
+              # time out
               assert seq_recv == -1
               print(f"Go-Back-{base}")
+              send_nxt = base
               for i in range(base,min(base+N,64)):
                 self.send_segment (i, fullpacket[i], random.choices([1,2,3],[0.85,0.1,0.05])[0], split, size) 
                 print(f"Resending {i}-th segment")
+                send_nxt += 1
+
             if base == len(fullpacket):
               print("Done!")
               break
@@ -369,27 +379,39 @@ class CustomTransportProtocol ():
         elif self.protocol == "GBN":
           print("GO-BACK-N")
           expect_recv = 0
+          recv = set()
+
           while True:
             # recieve msg from the client/router
-            recv_no, segment = self.recv_segment (split) # if packet is lost -> recv = -1 , out of order recv
+            recv_no, segment = self.recv_segment (split)
             print(f'No. {recv_no} segment recieved')
+
             if recv_no == expect_recv:
               appln_msg.append(segment)
               self.send_ACK(recv_no)
               expect_recv += 1
+              recv.add(recv_no)
               print("In-Order packet")
               print(f'Sent No. {recv_no} & ACK')
               print(f"Expect to get {expect_recv}")
+
+            elif recv_no < expect_recv:
+              self.send_ACK(recv_no)
+
             else:
-              if expect_recv > 0:
-                in_order = expect_recv - 1
-                self.send_ACK(in_order)
-                print("Out of Order packet :(( Discard it! \n Resend {in_order} ACK")
+              print(recv)
+              if recv:
+                in_order = max(recv) 
+              else:
+                in_order = -1 # should resemble timeout for lost on pkt 0
+
+              self.send_ACK(in_order)
+              print(f"Out of Order packet :(( Discard it! \n Resend {in_order} ACK")
 
             ########################
             ## Stopping Condition ##
             ########################
-            if len(appln_msg) >= 64:
+            if expect_recv == 64:
               print("Recieve All")
               break
 
