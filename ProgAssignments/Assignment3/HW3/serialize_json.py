@@ -46,7 +46,7 @@ def serialize (cm):
 def deserialize (buf):
 
   # get the json representation from the incoming buffer
-  json_buf = json.loads (buf)
+  json_buf = json.loads (buf.split(b'-')[0])
 
   # now retrieve the native data structure out of it.
   if json_buf["type"] == "ORDER":

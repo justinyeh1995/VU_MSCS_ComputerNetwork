@@ -138,7 +138,11 @@ class CustomApplnProtocol ():
       ###################
       ### Pad Payload ###
       ###################
-      while len(buf) < 1024:
+      if self.ser_type == SerializationType.JSON:
+        while len(buf) < 1024:
+         buf += "-"
+      else:
+        while len(buf) < 1024:
           buf += b"-"
       self.xport_obj.send_appln_msg (buf, len (buf), self.split)
     except Exception as e:
@@ -174,7 +178,11 @@ class CustomApplnProtocol ():
       ###################
       ### Pad Payload ###
       ###################
-      while len(buf) < 1024:
+      if self.ser_type == SerializationType.JSON:
+        while len(buf) < 1024:
+         buf += "-"
+      else:
+        while len(buf) < 1024:
           buf += b"-"
 
       self.xport_obj.send_appln_msg (buf, len (buf), self.split)

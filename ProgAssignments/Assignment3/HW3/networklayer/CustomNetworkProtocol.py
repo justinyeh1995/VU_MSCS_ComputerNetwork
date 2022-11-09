@@ -193,7 +193,7 @@ class CustomNetworkProtocol ():
       if not split:
         print ("custom network protocol::send_packet without chunking")
         #dummy = self.socket.recv_multipart () # wtf????
-        if self.config["Application"]["Serialization"] == "json":
+        if self.config["Application"]["Serialization"] == "json" and packet != b'dummy':
           self.socket.send_multipart ([b'',bytes(packet, "utf-8")])
         else:
           self.socket.send_multipart ([b'',packet])
