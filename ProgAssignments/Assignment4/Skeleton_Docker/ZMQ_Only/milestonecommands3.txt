@@ -1,0 +1,11 @@
+h5 python3 test_router.py -A 10.0.0.7 -P 4444 -t "Router5" &> r5.log &
+h6 python3 test_router.py -A 10.0.0.10 -P 4444 -t "Router6" &> r6.log &
+h7 python3 test_router.py -A 10.0.0.15 -P 4444 -t "Router7" &> r7.log &
+h10 python3 test_router.py -A 10.0.0.17 -P 4444 -t "Router10" &> r10.log &
+h15 python3 test_router.py -A 10.0.0.18 -P 4444 -t "Router15" &> r15.log &
+h17 python3 test_router.py -A 10.0.0.24 -P 4444 -t "Router17" &> r17.log &
+h18 python3 test_router.py -A 10.0.0.23 -P 4444 -t "Router18" &> r18.log &
+h23 python3 test_router.py -A 10.0.0.19 -P 5555 -t "Router23" &> r23.log &
+h24 python3 test_router.py -A 10.0.0.27 -P 5555 -t "Router24" &> r24.log &
+h19 python3 test_server.py &> server_grocery.log &
+h27 python3 test_server.py &> server_health.log &

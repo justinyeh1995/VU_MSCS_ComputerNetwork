@@ -1,0 +1,20 @@
+version: "3.9"
+services:
+  client:
+    container_name: test_client
+    image: nwclass
+    tty: true
+    cap_add:
+    - NET_ADMIN
+  router:
+    container_name: test_router
+    image: nwclass
+    tty: true
+    cap_add:
+    - NET_ADMIN
+  server:
+    container_name: test_server
+    image: nwclass
+    tty: true
+    cap_add:
+    - NET_ADMIN
